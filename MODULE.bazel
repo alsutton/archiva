@@ -191,6 +191,10 @@ maven.install(
         "org.apache.jackrabbit:oak-query-spi:1.40.0",
         "javax.jcr:jcr:2.0",
         "io.dropwizard.metrics:metrics-core:4.1.18",
+
+        # metadata-store-cassandra: Datastax Java driver 4.x.
+        "com.datastax.oss:java-driver-core:4.14.0",
+        "com.datastax.oss:java-driver-query-builder:4.14.0",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
