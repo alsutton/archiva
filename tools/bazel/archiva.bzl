@@ -32,6 +32,7 @@ def archiva_module(
         runtime_test_deps = None,
         test_framework = "junit4",
         manual_tests = None,
+        test_jvm_flags = None,
         test_size = "small",
         visibility = None):
     """Defines a Maven-shaped Archiva module.
@@ -131,6 +132,8 @@ def archiva_module(
     common_jvm_flags = [
         "-Dbasedir=%s" % native.package_name(),
     ]
+    if test_jvm_flags:
+        common_jvm_flags = common_jvm_flags + test_jvm_flags
 
     # Filter abstract bases — files named Abstract*.java define shared @Before
     # / helpers but have no @Test methods, so the JUnit runner rejects them.

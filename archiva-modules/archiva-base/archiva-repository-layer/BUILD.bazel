@@ -1,0 +1,84 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-repository-layer",
+    # All seven below assume Maven's target/test-classes filesystem layout —
+    # they either getResource().toURI() (returns jar: URI under Bazel),
+    # write back through a classpath URL (no-op for jar entries), or look up
+    # ${appserver.base}-relative files that the tests want writable. Each
+    # would need the test re-pointed at a writable temp dir.
+    manual_tests = {
+        "src/test/java/org/apache/archiva/repository/base/ArchivaRepositoryRegistryTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/repository/base/group/BasicRepositoryGroupValidatorTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/repository/base/group/RepositoryGroupHandlerTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/repository/base/managed/BasicManagedRepositoryValidatorTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/repository/base/managed/ManagedRepositoryHandlerTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/repository/base/remote/BasicRemoteRepositoryValidatorTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/repository/base/remote/RemoteRepositoryHandlerTest.java": ["manual"],
+    },
+    deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-event-api",
+        "//archiva-modules/archiva-base/archiva-event-central",
+        "//archiva-modules/archiva-base/archiva-filelock",
+        "//archiva-modules/archiva-base/archiva-model",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//archiva-modules/archiva-base/archiva-storage-fs",
+        "//archiva-modules/archiva-base/archiva-xml-tools",
+        "//third_party/archiva-components/spring-quartz",
+        "//third_party/archiva-components/spring-registry-api",
+        "@maven//:com_cronutils_cron_utils",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_collections4",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-event-api",
+        "//archiva-modules/archiva-base/archiva-event-central",
+        "//archiva-modules/archiva-base/archiva-filelock",
+        "//archiva-modules/archiva-base/archiva-model",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//archiva-modules/archiva-base/archiva-storage-fs",
+        "//archiva-modules/archiva-base/archiva-test-utils",
+        "//third_party/archiva-components/spring-registry-api",
+        "@maven//:commons_io_commons_io",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_junit_jupiter",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+        "@maven//:org_springframework_spring_test",
+    ],
+    runtime_test_deps = [
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        "@maven//:org_apache_logging_log4j_log4j_jcl",
+        "@maven//:org_springframework_spring_beans",
+        "@maven//:commons_beanutils_commons_beanutils",
+        "//third_party/archiva-components/spring-registry-commons",
+        "//third_party/archiva-components/spring-cache-ehcache",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_console_standalone",
+    ],
+    test_framework = "jupiter",
+    # Maven surefire passes appserver.base=${project.build.directory}/test-classes.
+    # Point at the runfiles src/test/resources tree for reads; writes will fail
+    # the same way as Maven's target/test-classes can't be written to a sealed jar.
+    test_jvm_flags = [
+        "-Dappserver.base=archiva-modules/archiva-base/archiva-repository-layer/src/test/resources",
+    ],
+)
