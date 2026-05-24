@@ -75,6 +75,37 @@ maven.install(
 
         # metadata-model uses legacy javax.xml.bind annotations (not jakarta.xml.bind).
         "javax.xml.bind:jaxb-api:2.3.1",
+
+        # archiva-maven-repository + maven submodules. Versions from the root
+        # pom.xml properties block (maven3x.version, maven.resolver.version,
+        # wagon.version, httpclient.version).
+        "org.apache.maven:maven-core:3.8.1",
+        "org.apache.maven:maven-model:3.8.1",
+        "org.apache.maven:maven-model-builder:3.8.1",
+        "org.apache.maven:maven-artifact:3.8.1",
+        "org.apache.maven:maven-repository-metadata:3.8.1",
+        "org.apache.maven:maven-compat:3.8.1",
+        "org.apache.maven.resolver:maven-resolver-api:1.6.2",
+        "org.apache.maven.resolver:maven-resolver-impl:1.6.2",
+        "org.apache.maven:maven-resolver-provider:3.8.1",
+        "org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2",
+        "org.apache.maven.resolver:maven-resolver-util:1.6.2",
+        "org.apache.maven.resolver:maven-resolver-spi:1.6.2",
+        "org.apache.maven.wagon:wagon-provider-api:3.3.3",
+        "org.apache.maven.wagon:wagon-http:3.3.3",
+        "org.apache.maven.wagon:wagon-http-lightweight:3.3.3",
+        "org.apache.maven.wagon:wagon-http-shared:3.3.3",
+        "org.apache.httpcomponents:httpclient:4.5.13",
+        "org.apache.httpcomponents:httpcore:4.4.15",
+        "org.modelmapper:modelmapper:2.4.5",
+        "org.codehaus.plexus:plexus-classworlds:2.6.0",
+
+        # archiva-maven-model test
+        "org.json:json:20211205",
+        "com.fasterxml.jackson.core:jackson-databind:2.12.2",
+        "com.fasterxml.jackson.core:jackson-core:2.12.2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.12.2",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.12.2",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

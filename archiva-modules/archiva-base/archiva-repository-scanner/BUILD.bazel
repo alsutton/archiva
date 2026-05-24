@@ -2,10 +2,10 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "archiva-repository-scanner",
-    # Tests require a Spring-autowired RepositoryProvider bean implemented by
-    # archiva-maven-repository (not yet wired). Compile-only here.
+    # Same getResource().toURI() -> Paths.get() pattern as the policies/
+    # repository-layer manual tests. Test code wants test resources as
+    # filesystem paths, Bazel packs them into a jar.
     manual_tests = {
-        "src/test/java/org/apache/archiva/repository/scanner/RepositoryContentConsumersTest.java": ["manual"],
         "src/test/java/org/apache/archiva/repository/scanner/RepositoryScannerTest.java": ["manual"],
     },
     test_deps = [
@@ -40,6 +40,13 @@ archiva_module(
         "@maven//:commons_beanutils_commons_beanutils",
         "//third_party/archiva-components/spring-registry-commons",
         "//third_party/archiva-components/spring-cache-ehcache",
+        # Provides the RepositoryProvider Spring bean the tests autowire.
+        "//archiva-modules/archiva-maven/archiva-maven-repository",
+        # archiva-maven-proxy's spring-context.xml wires wagon#http -> HttpWagon.
+        "@maven//:org_apache_maven_wagon_wagon_http",
+        "@maven//:org_apache_maven_wagon_wagon_http_lightweight",
+        "@maven//:org_apache_maven_wagon_wagon_http_shared",
+        "@maven//:org_apache_httpcomponents_httpcore",
     ],
     deps = [
         "//archiva-modules/archiva-base/archiva-common",
