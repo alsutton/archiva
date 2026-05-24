@@ -81,7 +81,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  *
  */
-@Service( "commons-configuration" )
+@Service( "archiva-commons-configuration" )
 public class CommonsConfigurationRegistry
     implements Registry
 {

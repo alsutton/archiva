@@ -103,7 +103,7 @@ public class DefaultArchivaConfiguration
      * Plexus registry to read the configuration from.
      */
     @Inject
-    @Named(value = "commons-configuration")
+    @Named(value = "archiva-commons-configuration")
     private Registry registry;
 
     /**

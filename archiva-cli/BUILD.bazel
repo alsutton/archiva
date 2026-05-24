@@ -18,6 +18,9 @@ archiva_module(
 java_binary(
     name = "archiva-cli",
     main_class = "org.apache.archiva.cli.ArchivaCli",
+    # Default metadata store provider id is "jcr" (Apache Oak). The CLI ships
+    # with the file-backed store instead, so override to that id.
+    jvm_flags = ["-Darchiva.repositorySessionFactory.id=file"],
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":archiva-cli-lib",
@@ -28,11 +31,17 @@ java_binary(
         "//archiva-modules/archiva-base/archiva-policies",
         "//archiva-modules/archiva-base/archiva-repository-admin/archiva-repository-admin-default",
         "//archiva-modules/archiva-maven/archiva-maven-repository",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-repository",
         "//archiva-modules/metadata/metadata-store-provider/metadata-store-file",
         "//third_party/archiva-components/spring-cache-ehcache",
         "//third_party/archiva-components/spring-registry-commons",
         "@maven//:commons_beanutils_commons_beanutils",
         "@maven//:org_apache_logging_log4j_log4j_core",
         "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        # Wagon impls referenced by archiva-maven-proxy's spring-context.xml.
+        "@maven//:org_apache_maven_wagon_wagon_http",
+        "@maven//:org_apache_maven_wagon_wagon_http_lightweight",
+        "@maven//:org_apache_maven_wagon_wagon_http_shared",
+        "@maven//:org_apache_httpcomponents_httpcore",
     ],
 )
