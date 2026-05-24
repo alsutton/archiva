@@ -1,2 +1,9 @@
-# Marker for the tools/bazel package. Starlark files live alongside.
+load("@rules_java//java:defs.bzl", "java_library")
+
 exports_files(["archiva.bzl"])
+
+java_library(
+    name = "archiva-test-classloader",
+    srcs = ["src/main/java/org/apache/archiva/bazel/test/ArchivaTestClassLoader.java"],
+    visibility = ["//visibility:public"],
+)

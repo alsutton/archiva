@@ -2,17 +2,13 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "archiva-maven-repository",
-    # All 13 are the recurring getResource().toURI() -> Paths.get() pattern:
-    # tests assume Maven's writable target/test-classes layout, Bazel packs
-    # resources into a jar.
+    # Tests below assume Maven's target/test-repository or hit
+    # `appserver.base` Spring placeholders. The custom classloader handles
+    # getResource()-style lookups but not these hardcoded target/ paths.
     manual_tests = {
-        "src/test/java/org/apache/archiva/maven/repository/content/ManagedDefaultRepositoryContentTest.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/content/MavenContentHelperTest.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/content/MavenRepositoryRequestInfoTest.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/merge/Maven2RepositoryMergerTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/MetadataToolsTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/RepositoryMetadataReaderTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/RepositoryMetadataWriterTest.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverMRM1411RepoGroupTest.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverMRM1411Test.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverManagedReleaseTest.java": ["manual"],

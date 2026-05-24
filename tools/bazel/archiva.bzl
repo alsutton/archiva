@@ -25,6 +25,7 @@ _JUPITER_TEST_RUNTIME_DEPS = [
 def _class_name(test_src):
     return test_src.replace("src/test/java/", "").replace(".java", "").replace("/", ".")
 
+
 def archiva_module(
         name,
         deps = [],
@@ -126,12 +127,21 @@ def archiva_module(
         deps = test_lib_deps,
     )
 
-    # `-Dbasedir` covers tests that use FileUtils.getBasedir(). Tests that
-    # bypass that helper and call `Paths.get("src/test/...")` directly will
-    # need to be tagged `manual` (see manual_tests) — setting `-Duser.dir`
-    # breaks Bazel's test runner bootstrap, so there's no clean global fix.
+    # `-Dbasedir` covers tests that use FileUtils.getBasedir().
+    #
+    # `java.system.class.loader` papers over the Maven test-classes layout
+    # assumption: many tests call
+    #   Thread.currentThread().getContextClassLoader().getResource("foo").toURI()
+    #   Paths.get(uri)
+    # Maven's target/test-classes lives on disk so the URI is file:; Bazel
+    # packs classpath resources into a jar so the URI is jar:file:.../foo.jar!/foo
+    # which Paths.get(URI) rejects. The custom system CL prepends the runfiles
+    # location of src/test/resources to the search path, so resource lookups
+    # find a directory entry first and return a file: URL.
     common_jvm_flags = [
         "-Dbasedir=%s" % native.package_name(),
+        "-Djava.system.class.loader=org.apache.archiva.bazel.test.ArchivaTestClassLoader",
+        "-Darchiva.bazel.test.resources.dir=%s/src/test/resources" % native.package_name(),
     ]
     if test_jvm_flags:
         common_jvm_flags = common_jvm_flags + test_jvm_flags
@@ -151,7 +161,10 @@ def archiva_module(
             data = [":test-resources"],
             jvm_flags = common_jvm_flags,
             tags = manual_tests.get(test_src, []),
-            runtime_deps = [":test-lib"] + runtime_test_deps,
+            runtime_deps = [
+                ":test-lib",
+                "//tools/bazel:archiva-test-classloader",
+            ] + runtime_test_deps,
         )
         if test_framework == "jupiter":
             # JUnit 5 / Jupiter requires the platform launcher; Bazel's bundled

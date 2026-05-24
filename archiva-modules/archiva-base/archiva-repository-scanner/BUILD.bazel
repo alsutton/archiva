@@ -2,12 +2,6 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "archiva-repository-scanner",
-    # Same getResource().toURI() -> Paths.get() pattern as the policies/
-    # repository-layer manual tests. Test code wants test resources as
-    # filesystem paths, Bazel packs them into a jar.
-    manual_tests = {
-        "src/test/java/org/apache/archiva/repository/scanner/RepositoryScannerTest.java": ["manual"],
-    },
     test_deps = [
         "//archiva-modules/archiva-base/archiva-common",
         "//archiva-modules/archiva-base/archiva-filelock",

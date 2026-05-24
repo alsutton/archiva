@@ -2,20 +2,6 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "archiva-repository-layer",
-    # All seven below assume Maven's target/test-classes filesystem layout —
-    # they either getResource().toURI() (returns jar: URI under Bazel),
-    # write back through a classpath URL (no-op for jar entries), or look up
-    # ${appserver.base}-relative files that the tests want writable. Each
-    # would need the test re-pointed at a writable temp dir.
-    manual_tests = {
-        "src/test/java/org/apache/archiva/repository/base/ArchivaRepositoryRegistryTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/repository/base/group/BasicRepositoryGroupValidatorTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/repository/base/group/RepositoryGroupHandlerTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/repository/base/managed/BasicManagedRepositoryValidatorTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/repository/base/managed/ManagedRepositoryHandlerTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/repository/base/remote/BasicRemoteRepositoryValidatorTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/repository/base/remote/RemoteRepositoryHandlerTest.java": ["manual"],
-    },
     deps = [
         "//archiva-modules/archiva-base/archiva-checksum",
         "//archiva-modules/archiva-base/archiva-common",

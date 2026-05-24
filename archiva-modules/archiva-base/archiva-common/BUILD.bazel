@@ -11,12 +11,4 @@ archiva_module(
         "@maven//:commons_io_commons_io",
         "@maven//:org_apache_commons_commons_lang3",
     ],
-    manual_tests = {
-        # ContextClassLoader.getResource().toURI() -> Paths.get() requires a
-        # file: URI. Bazel java_library packs classpath resources into a jar,
-        # so getResource() returns jar:file:...!/... which Paths.get rejects.
-        # Re-enable once the test is rewritten to copy from an InputStream,
-        # or once a non-jarred classpath rule replaces java_library.
-        "src/test/java/org/apache/archiva/common/utils/FileUtilsTest.java": ["manual"],
-    },
 )
