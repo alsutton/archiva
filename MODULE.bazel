@@ -142,6 +142,25 @@ maven.install(
 
         # archiva-security & web layer
         "jakarta.servlet:jakarta.servlet-api:4.0.4",
+        "jakarta.ws.rs:jakarta.ws.rs-api:2.1.6",
+
+        # archiva-web-common
+        "com.rometools:rome:1.16.0",
+        "org.jsoup:jsoup:1.14.2",
+        "org.apache.cxf:cxf-rt-rs-extension-providers:3.3.11",
+        "org.apache.cxf:cxf-rt-frontend-jaxrs:3.3.11",
+        "org.apache.archiva.redback:redback-common-ldap:2.6.2",
+        "org.springframework:spring-web:5.3.22",
+
+        # archiva-rest-api
+        "io.swagger.core.v3:swagger-annotations:2.1.10",
+
+        # archiva-rest-services (Jackson XML + datetime modules)
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2",
+        "jakarta.validation:jakarta.validation-api:2.0.2",
+        "org.apache.archiva.redback:redback-rest-api:2.6.2",
+        "org.apache.archiva.redback:redback-rest-services:2.6.2",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

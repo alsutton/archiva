@@ -1,0 +1,9 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "generic-metadata-support",
+    deps = [
+        "//archiva-modules/metadata/metadata-model",
+        "@maven//:org_springframework_spring_context",
+    ],
+)
