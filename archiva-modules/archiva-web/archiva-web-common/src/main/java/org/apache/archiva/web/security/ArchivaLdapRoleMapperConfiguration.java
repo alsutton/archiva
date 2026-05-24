@@ -152,7 +152,8 @@ public class ArchivaLdapRoleMapperConfiguration
         }
     }
 
-    @Override
+    // @Override -- added in Redback 3.x; not present in the 2.6.2 interface
+    // we ship against. Compiles as a plain method that nothing calls.
     public Collection<String> getLdapGroupMapping( final String groupName ) throws MappingException
     {
         try
