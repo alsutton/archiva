@@ -1,1 +1,17 @@
-# Root marker — Bazel needs a workspace-root package even if it's empty.
+load("//archiva-modules/metadata/test-repository:files.bzl", "TEST_REPOSITORY_FILES")
+load("//tools/bazel:staged_files.bzl", "staged_files")
+
+# Bazel needs a workspace-root package even if it's almost empty. We
+# use it to stage the test-repository fixtures at
+# `target/test-repository/...` because the workspace-root package adds
+# no extra path prefix when its outputs land in runfiles -- exactly
+# what tests like DuplicateArtifactsConsumerTest need when they do
+# `Paths.get("target/test-repository/...")`.
+staged_files(
+    name = "target-test-repository",
+    src_paths = TEST_REPOSITORY_FILES,
+    srcs_filegroup = "//archiva-modules/metadata/test-repository:raw-resources",
+    prefix = "target/test-repository",
+    strip_prefix = "archiva-modules/metadata/test-repository/src/main/resources",
+    visibility = ["//visibility:public"],
+)

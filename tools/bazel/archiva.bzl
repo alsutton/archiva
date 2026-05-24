@@ -33,6 +33,7 @@ def archiva_module(
         runtime_test_deps = None,
         test_framework = "junit4",
         manual_tests = None,
+        test_data = None,
         test_jvm_flags = None,
         skip_tests = False,
         test_size = "small",
@@ -71,6 +72,8 @@ def archiva_module(
             runtime_test_deps += _JUPITER_TEST_RUNTIME_DEPS
     if manual_tests == None:
         manual_tests = {}
+    if test_data == None:
+        test_data = []
 
     main_srcs = native.glob(["src/main/java/**/*.java"], allow_empty = True)
     main_resources = native.glob(["src/main/resources/**"], allow_empty = True)
@@ -79,7 +82,7 @@ def archiva_module(
     # Anything under src/test besides java/ and resources/ — e.g. src/test/examples,
     # src/test/conf, src/test/repository — is exposed as runfiles so tests that
     # resolve files via basedir-relative paths can find them.
-    test_data = native.glob(
+    extra_test_files = native.glob(
         ["src/test/**"],
         exclude = ["src/test/java/**", "src/test/resources/**"],
         allow_empty = True,
@@ -100,7 +103,7 @@ def archiva_module(
 
     native.filegroup(
         name = "test-resources",
-        srcs = test_resources + test_data,
+        srcs = test_resources + extra_test_files,
     )
 
     test_lib_deps = ["@maven//:junit_junit"]
@@ -158,7 +161,7 @@ def archiva_module(
         test_kwargs = dict(
             name = _class_name(test_src),
             size = test_size,
-            data = [":test-resources"],
+            data = [":test-resources"] + test_data,
             jvm_flags = common_jvm_flags,
             tags = manual_tests.get(test_src, []),
             runtime_deps = [

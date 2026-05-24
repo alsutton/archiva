@@ -11,3 +11,9 @@ java_library(
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "raw-resources",
+    srcs = glob(["src/main/resources/**"]),
+    visibility = ["//:__pkg__"],
+)

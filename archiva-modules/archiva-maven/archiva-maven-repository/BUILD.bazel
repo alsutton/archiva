@@ -2,20 +2,26 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "archiva-maven-repository",
-    # Tests below assume Maven's target/test-repository or hit
-    # `appserver.base` Spring placeholders. The custom classloader handles
-    # getResource()-style lookups but not these hardcoded target/ paths.
     manual_tests = {
+        # JUnit Jupiter (non-public class) -- the JUnit 4 runner can't drive
+        # it, and the whole module would need test_framework = "jupiter".
         "src/test/java/org/apache/archiva/maven/repository/content/MavenContentHelperTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/content/MavenRepositoryRequestInfoTest.java": ["manual"],
+        # These three write to target/test-repository-target/... -- a
+        # mutable Maven build dir that Bazel's sandbox doesn't create.
+        # Would need a per-test mkdir prelude or a test-code rewrite to
+        # use TEST_TMPDIR.
         "src/test/java/org/apache/archiva/maven/repository/merge/Maven2RepositoryMergerTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverMRM1411RepoGroupTest.java": ["manual"],
         "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverMRM1411Test.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverManagedReleaseTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverManagedSnapshotTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverTest.java": ["manual"],
-        "src/test/java/org/apache/archiva/maven/repository/metadata/storage/MavenRepositoryMetadataReaderTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/maven/repository/metadata/storage/Maven2RepositoryMetadataResolverMRM1411RepoGroupTest.java": ["manual"],
     },
+    test_data = ["//:target-test-repository"],
+    test_jvm_flags = [
+        # maven-surefire systemPropertyVariables sets appserver.base to
+        # ${project.build.directory}/test-classes; tests' Spring contexts
+        # use it to expand <bean property> placeholders. Point it at the
+        # module's runfiles test-resources tree.
+        "-Dappserver.base=archiva-modules/archiva-maven/archiva-maven-repository/src/test/resources",
+    ],
     test_deps = [
         "//archiva-modules/archiva-base/archiva-checksum",
         "//archiva-modules/archiva-base/archiva-common",

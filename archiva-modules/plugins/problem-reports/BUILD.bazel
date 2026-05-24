@@ -2,13 +2,7 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "problem-reports",
-    # The one test reads from hardcoded `target/test-repository/...` paths
-    # (Maven dependency-plugin would unpack test-repository.jar there).
-    # Replicating that in Bazel needs a path-renaming genrule that isn't
-    # justified for a single test.
-    manual_tests = {
-        "src/test/java/org/apache/archiva/reports/consumers/DuplicateArtifactsConsumerTest.java": ["manual"],
-    },
+    test_data = ["//:target-test-repository"],
     runtime_test_deps = [
         "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
         "@maven//:org_apache_logging_log4j_log4j_core",
