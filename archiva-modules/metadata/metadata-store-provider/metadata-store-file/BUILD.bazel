@@ -1,0 +1,38 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "metadata-store-file",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//archiva-modules/metadata/metadata-repository-api:test-lib",
+        "@maven//:junit_junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_mockito_mockito_core",
+    ],
+    test_framework = "jupiter",
+    runtime_test_deps = [
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        "@maven//:org_junit_jupiter_junit_jupiter_engine",
+        "@maven//:org_junit_platform_junit_platform_console_standalone",
+        # Picked up via Spring component-scan in archiva-policies.
+        "//third_party/archiva-components/spring-cache-ehcache",
+    ],
+)
