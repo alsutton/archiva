@@ -26,6 +26,7 @@ java_library(
         "//archiva-modules/archiva-web/archiva-security",
         "//archiva-modules/archiva-web/archiva-webdav",
         "//archiva-modules/metadata/metadata-store-provider/metadata-store-file",
+        "//archiva-modules/metadata/metadata-store-provider/oak-jcr/metadata-store-jcr",
         "//archiva-modules/plugins/audit",
         "//archiva-modules/plugins/generic-metadata-support",
         "//third_party/archiva-components/spring-cache-ehcache",

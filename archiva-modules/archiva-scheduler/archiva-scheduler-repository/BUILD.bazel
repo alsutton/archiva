@@ -2,14 +2,22 @@ load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
     name = "archiva-scheduler-repository",
-    # Tests need a repositorySessionFactory#jcr bean implemented by the
-    # Jackrabbit Oak JCR store provider (//archiva-modules/metadata/
-    # metadata-store-provider/oak-jcr) which pulls in the full Oak +
-    # Jackrabbit stack -- not yet wired.
+    # oak-jcr/metadata-store-jcr now wires up enough that the JCR bean
+    # registers, but Oak 1.40.0 bundles Lucene 4.7 (LUCENE_47 field) while
+    # archiva's classpath ends up with a newer Lucene. Maven solves this
+    # with a maven-shade-plugin pass on oak-jcr-lucene that renames Oak's
+    # Lucene to a private package; replicating that under Bazel needs a
+    # bytecode-rewriting rule (custom Starlark wrapping ASM or jarjar).
     manual_tests = {
         "src/test/java/org/apache/archiva/scheduler/repository/ArchivaRepositoryScanningTaskExecutorPhase1Test.java": ["manual"],
         "src/test/java/org/apache/archiva/scheduler/repository/ArchivaRepositoryScanningTaskExecutorPhase2Test.java": ["manual"],
     },
+    test_jvm_flags = [
+        # JcrRepositorySessionFactory reads appserver.base; needs to be a
+        # non-null writable path. /tmp is fine for a one-off test process
+        # (Bazel sandboxes each test in its own filesystem view).
+        "-Dappserver.base=/tmp",
+    ],
     test_deps = [
         "//archiva-modules/archiva-base/archiva-common",
         "//archiva-modules/archiva-base/archiva-consumers/archiva-consumer-api",
@@ -44,6 +52,7 @@ archiva_module(
         "@maven//:org_springframework_spring_test",
     ],
     runtime_test_deps = [
+        "//archiva-modules/metadata/metadata-store-provider/oak-jcr/metadata-store-jcr",
         "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
         "@maven//:org_apache_logging_log4j_log4j_core",
         "@maven//:org_apache_logging_log4j_log4j_jcl",
