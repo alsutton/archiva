@@ -1,0 +1,60 @@
+load("@rules_java//java:defs.bzl", "java_library", "java_test")
+
+java_library(
+    name = "archiva-checksum",
+    srcs = glob(["src/main/java/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:commons_io_commons_io",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+filegroup(
+    name = "test-resources",
+    srcs = glob(
+        ["src/test/resources/**"],
+        allow_empty = True,
+    ),
+)
+
+java_library(
+    name = "test-lib",
+    srcs = glob(["src/test/java/**/*.java"]),
+    resources = [":test-resources"],
+    resource_strip_prefix = "archiva-modules/archiva-base/archiva-checksum/src/test/resources",
+    testonly = True,
+    deps = [
+        ":archiva-checksum",
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-test-utils",
+        "@maven//:commons_codec_commons_codec",
+        "@maven//:commons_io_commons_io",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+[
+    java_test(
+        name = test_class.replace("src/test/java/", "").replace(".java", "").replace("/", "."),
+        size = "small",
+        # Tests resolve files relative to ${basedir}/src/test/resources.
+        # Bazel's runfiles cwd is the runfiles root, so the workspace-relative
+        # module path lines up with FileUtils.getBasedir() + "src/test/resources".
+        data = [":test-resources"],
+        jvm_flags = ["-Dbasedir=archiva-modules/archiva-base/archiva-checksum"],
+        test_class = test_class.replace("src/test/java/", "").replace(".java", "").replace("/", "."),
+        runtime_deps = [
+            ":test-lib",
+            "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+            "@maven//:org_apache_logging_log4j_log4j_core",
+        ],
+    )
+    for test_class in glob(["src/test/java/**/*Test.java"])
+]

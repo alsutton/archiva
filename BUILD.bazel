@@ -1,0 +1,1 @@
+# Root marker — Bazel needs a workspace-root package even if it's empty.
