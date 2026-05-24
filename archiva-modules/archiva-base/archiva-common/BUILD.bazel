@@ -1,62 +1,22 @@
-load("@rules_java//java:defs.bzl", "java_library", "java_test")
+load("//tools/bazel:archiva.bzl", "archiva_module")
 
-java_library(
+archiva_module(
     name = "archiva-common",
-    srcs = glob(["src/main/java/**/*.java"]),
-    visibility = ["//visibility:public"],
     deps = [
         "@maven//:org_apache_commons_commons_lang3",
-        # slf4j is inherited via the archiva-base parent pom in Maven; declared explicitly here.
+        # slf4j is inherited via the archiva-base parent pom in Maven.
         "@maven//:org_slf4j_slf4j_api",
     ],
-)
-
-# Resources shared by every test in this module (log4j config + test data).
-filegroup(
-    name = "test-resources",
-    srcs = glob(
-        ["src/test/resources/**"],
-        allow_empty = True,
-    ),
-)
-
-java_library(
-    name = "test-lib",
-    srcs = glob(["src/test/java/**/*.java"]),
-    resources = [":test-resources"],
-    resource_strip_prefix = "archiva-modules/archiva-base/archiva-common/src/test/resources",
-    testonly = True,
-    deps = [
-        ":archiva-common",
+    test_deps = [
         "@maven//:commons_io_commons_io",
-        "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_lang3",
     ],
+    manual_tests = {
+        # ContextClassLoader.getResource().toURI() -> Paths.get() requires a
+        # file: URI. Bazel java_library packs classpath resources into a jar,
+        # so getResource() returns jar:file:...!/... which Paths.get rejects.
+        # Re-enable once the test is rewritten to copy from an InputStream,
+        # or once a non-jarred classpath rule replaces java_library.
+        "src/test/java/org/apache/archiva/common/utils/FileUtilsTest.java": ["manual"],
+    },
 )
-
-# FileUtilsTest.unzip() does ContextClassLoader.getResource("test-repository.zip").toURI()
-# then Paths.get(uri). Under Maven, classpath resources live in target/test-classes/ as
-# loose files (URI scheme "file:"), so this works. Under Bazel, java_library packages
-# resources into a jar; the URI scheme is "jar:file:...!/..." and Paths.get rejects it.
-# Excluded from default //... runs; remove the tag (or rewrite the test to copy out of
-# the classpath stream) to re-enable.
-_MANUAL_TESTS = {
-    "src/test/java/org/apache/archiva/common/utils/FileUtilsTest.java": ["manual"],
-}
-
-[
-    java_test(
-        name = test_class.replace("src/test/java/", "").replace(".java", "").replace("/", "."),
-        size = "small",
-        data = [":test-resources"],
-        jvm_flags = ["-Dbasedir=archiva-modules/archiva-base/archiva-common"],
-        tags = _MANUAL_TESTS.get(test_class, []),
-        test_class = test_class.replace("src/test/java/", "").replace(".java", "").replace("/", "."),
-        runtime_deps = [
-            ":test-lib",
-            "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
-            "@maven//:org_apache_logging_log4j_log4j_core",
-        ],
-    )
-    for test_class in glob(["src/test/java/**/*Test.java"])
-]

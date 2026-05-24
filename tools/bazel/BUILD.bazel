@@ -1,0 +1,2 @@
+# Marker for the tools/bazel package. Starlark files live alongside.
+exports_files(["archiva.bzl"])

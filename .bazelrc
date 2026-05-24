@@ -1,6 +1,8 @@
 common --enable_bzlmod
 build --java_language_version=11
 build --java_runtime_version=remotejdk_21
+# Maven doesn't run Error Prone; match that baseline. Enable per-target if desired.
+build --javacopt=-XepDisableAllChecks
 build --tool_java_language_version=21
 build --tool_java_runtime_version=remotejdk_21
 test --test_output=errors

@@ -1,20 +1,17 @@
 load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
-    name = "archiva-checksum",
+    name = "archiva-transaction",
     deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
         "//archiva-modules/archiva-base/archiva-common",
-        "@maven//:commons_codec_commons_codec",
         "@maven//:commons_io_commons_io",
-        "@maven//:jakarta_annotation_jakarta_annotation_api",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_slf4j_slf4j_api",
     ],
     test_deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
         "//archiva-modules/archiva-base/archiva-common",
         "//archiva-modules/archiva-base/archiva-test-utils",
         "@maven//:commons_io_commons_io",
-        "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:junit_junit",
     ],
 )

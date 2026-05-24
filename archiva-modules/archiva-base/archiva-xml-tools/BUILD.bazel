@@ -1,0 +1,21 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-xml-tools",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "@maven//:org_apache_commons_commons_lang3",
+    ],
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-test-utils",
+        "@maven//:junit_junit",
+    ],
+    # AbstractArchivaXmlTestCase uses bare `Paths.get("src/test/examples")` —
+    # relies on Maven running tests with the module dir as cwd. Bazel can't
+    # honour that without breaking its test runner bootstrap.
+    manual_tests = {
+        "src/test/java/org/apache/archiva/xml/XMLReaderTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/xml/LatinEntityResolutionReaderTest.java": ["manual"],
+    },
+)

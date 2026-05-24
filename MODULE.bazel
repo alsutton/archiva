@@ -36,6 +36,22 @@ maven.install(
         "org.springframework:spring-core:5.3.22",
         "org.xmlunit:xmlunit-core:2.8.4",
         "org.junit.platform:junit-platform-console-standalone:1.5.2",
+
+        # archiva-storage-api
+        "org.junit.jupiter:junit-jupiter-api:5.5.2",
+        "org.junit.jupiter:junit-jupiter-engine:5.5.2",
+        "org.mockito:mockito-core:3.4.0",
+        "org.mockito:mockito-junit-jupiter:3.4.0",
+
+        # archiva-filelock
+        "org.springframework:spring-context:5.3.22",
+        "org.springframework:spring-beans:5.3.22",
+        "javax.inject:javax.inject:1",
+        "org.apache.logging.log4j:log4j-jcl:2.17.1",
+        "com.googlecode.multithreadedtc:multithreadedtc:1.01",
+
+        # archiva-model uses commons-collections4 transitively
+        "org.apache.commons:commons-collections4:4.4",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
