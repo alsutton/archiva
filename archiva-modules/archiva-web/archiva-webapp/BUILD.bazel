@@ -1,0 +1,46 @@
+load("@rules_java//java:defs.bzl", "java_library")
+load("//tools/bazel:war.bzl", "java_war")
+
+# Aggregator java_library to collect the runtime classpath. We harvest
+# `transitive_runtime_jars` from this in java_war below. archiva-rest-services
+# and archiva-web-common are blocked on Redback master common-ldap and aren't
+# yet wired -- their absence makes this WAR demonstrably-incomplete-but-
+# packaged, which is what we want from the Bazel side.
+java_library(
+    name = "archiva-webapp-runtime",
+    runtime_deps = [
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-consumers/archiva-indexer-consumers",
+        "//archiva-modules/archiva-base/archiva-consumers/archiva-metadata-consumer",
+        "//archiva-modules/archiva-base/archiva-policies",
+        "//archiva-modules/archiva-base/archiva-repository-admin/archiva-repository-admin-default",
+        "//archiva-modules/archiva-maven/archiva-maven-indexer",
+        "//archiva-modules/archiva-maven/archiva-maven-repository",
+        "//archiva-modules/archiva-maven/archiva-maven-scheduler",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-repository",
+        "//archiva-modules/archiva-web/archiva-rest/archiva-rest-api",
+        "//archiva-modules/archiva-web/archiva-security",
+        "//archiva-modules/archiva-web/archiva-webdav",
+        "//archiva-modules/metadata/metadata-store-provider/metadata-store-file",
+        "//archiva-modules/plugins/audit",
+        "//archiva-modules/plugins/generic-metadata-support",
+        "//third_party/archiva-components/spring-cache-ehcache",
+        "//third_party/archiva-components/spring-registry-commons",
+        "//third_party/archiva-components/spring-quartz",
+        "//third_party/archiva-components/spring-taskqueue",
+        "@maven//:commons_beanutils_commons_beanutils",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_maven_wagon_wagon_http",
+        "@maven//:org_apache_maven_wagon_wagon_http_lightweight",
+        "@maven//:org_apache_maven_wagon_wagon_http_shared",
+        "@maven//:org_apache_httpcomponents_httpcore",
+    ],
+)
+
+java_war(
+    name = "archiva",
+    deps = [":archiva-webapp-runtime"],
+    webapp_files = glob(["src/main/webapp/**"]),
+    webapp_root = "src/main/webapp",
+)
