@@ -42,6 +42,7 @@ java_library(
 
 java_war(
     name = "archiva",
+    visibility = ["//archiva-jetty:__pkg__"],
     deps = [":archiva-webapp-runtime"],
     webapp_files = glob(["src/main/webapp/**"]),
     webapp_root = "src/main/webapp",

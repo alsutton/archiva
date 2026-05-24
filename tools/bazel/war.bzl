@@ -93,4 +93,6 @@ java_war = rule(
                   "should be stripped off webapp_files' paths.",
         ),
     },
+    doc = "Bundles a Java web application into a .war zip; see this " +
+          "file's module docstring.",
 )
