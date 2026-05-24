@@ -1,0 +1,63 @@
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "strip_prefix")
+
+# Conf files (jetty.xml, archiva.xml, shared.xml, archiva-cassandra.properties)
+# go under conf/ in the tarball.
+pkg_files(
+    name = "conf-files",
+    srcs = glob(["src/main/conf/*"]),
+    prefix = "archiva/conf",
+    strip_prefix = strip_prefix.from_pkg("src/main/conf"),
+)
+
+# WAR is renamed to a stable filename for the launcher.
+pkg_files(
+    name = "war-file",
+    srcs = ["//archiva-modules/archiva-web/archiva-webapp:archiva"],
+    prefix = "archiva/apps",
+    # The WAR is built as `archiva.war`; default placement is fine.
+)
+
+# Bundle the resolved jetty-runner jar at lib/jetty-runner.jar (Bazel
+# names it `processed_jetty-runner-9.4.43.v20210629.jar`, so we rename).
+genrule(
+    name = "jetty-runner-jar",
+    srcs = ["@maven//:org_eclipse_jetty_jetty_runner"],
+    outs = ["jetty-runner.jar"],
+    cmd = "cp $(SRCS) $@",
+)
+
+pkg_files(
+    name = "jetty-runner-files",
+    srcs = [":jetty-runner-jar"],
+    prefix = "archiva/lib",
+)
+
+# Launcher script, with execute bit preserved.
+pkg_files(
+    name = "launcher",
+    srcs = ["bin/archiva"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "archiva/bin",
+)
+
+# LICENSE + NOTICE at the dist root.
+pkg_files(
+    name = "doc-files",
+    srcs = ["src/main/resources/LICENSE"],
+    prefix = "archiva",
+    strip_prefix = strip_prefix.from_pkg("src/main/resources"),
+)
+
+pkg_tar(
+    name = "archiva-jetty-dist",
+    srcs = [
+        ":conf-files",
+        ":doc-files",
+        ":jetty-runner-files",
+        ":launcher",
+        ":war-file",
+    ],
+    extension = "tar.gz",
+    visibility = ["//visibility:public"],
+)

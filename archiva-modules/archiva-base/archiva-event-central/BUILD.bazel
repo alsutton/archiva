@@ -1,0 +1,10 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-event-central",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-event-api",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

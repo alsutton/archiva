@@ -1,0 +1,5 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-security-common",
+)

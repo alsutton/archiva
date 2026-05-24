@@ -1,0 +1,19 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-metadata-consumer",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-consumers/archiva-consumer-api",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//third_party/archiva-components/spring-registry-api",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

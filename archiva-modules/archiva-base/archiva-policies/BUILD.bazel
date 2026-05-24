@@ -1,0 +1,33 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-policies",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//third_party/archiva-components/spring-cache-api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-filelock",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//archiva-modules/archiva-base/archiva-storage-fs",
+        "//archiva-modules/archiva-base/archiva-test-utils",
+        "@maven//:commons_io_commons_io",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:junit_junit",
+        "@maven//:org_springframework_spring_test",
+    ],
+    runtime_test_deps = [
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        # Spring context references EhcacheCache by FQN in test-resources/spring-context.xml.
+        "//third_party/archiva-components/spring-cache-ehcache",
+        "@maven//:org_springframework_spring_beans",
+    ],
+)

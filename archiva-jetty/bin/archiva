@@ -1,0 +1,20 @@
+#!/bin/sh
+# Launcher for the Bazel-built Archiva distribution.
+#
+# Layout (relative to this script's location):
+#   apps/archiva.war  -- the deployable WAR (output of //archiva-modules/
+#                        archiva-web/archiva-webapp:archiva)
+#   conf/jetty.xml    -- Jetty server config
+#   lib/jetty-runner.jar
+#   logs/             -- log dir (created on demand)
+set -eu
+DIR=$(cd "$(dirname "$0")/.." && pwd)
+PORT="${ARCHIVA_PORT:-8080}"
+JAVA="${JAVA:-java}"
+mkdir -p "$DIR/logs" "$DIR/temp"
+exec "$JAVA" \
+  -Dappserver.base="$DIR" \
+  -Darchiva.repositorySessionFactory.id=file \
+  -jar "$DIR/lib/jetty-runner.jar" \
+  --port "$PORT" \
+  "$DIR/apps/archiva.war"

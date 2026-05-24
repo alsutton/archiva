@@ -55,7 +55,7 @@ public class DefaultRepositoryCommonValidator
     private ArchivaConfiguration archivaConfiguration;
 
     @Inject
-    @Named( value = "commons-configuration" )
+    @Named( value = "archiva-commons-configuration" )
     private org.apache.archiva.components.registry.Registry registry;
 
     /**

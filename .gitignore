@@ -23,3 +23,7 @@ out/
 #netbeans file
 nbactions.xml
 nb-configuration.xml
+
+# bazel
+/bazel-*
+/MODULE.bazel.lock

@@ -49,7 +49,7 @@
     </property>
   </bean>
 
-  <alias name="registry#default" alias="commons-configuration"/>
+  <alias name="registry#default" alias="archiva-commons-configuration"/>
 
   <alias name="userConfiguration#redback" alias="userConfiguration#default"/>
   <alias name="authorizer#rbac" alias="authorizer#default"/>

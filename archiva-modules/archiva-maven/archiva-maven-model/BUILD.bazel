@@ -1,0 +1,17 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-maven-model",
+    deps = [
+        "@maven//:javax_xml_bind_jaxb_api",
+    ],
+    test_deps = [
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_module_jackson_module_jaxb_annotations",
+        "@maven//:javax_xml_bind_jaxb_api",
+        "@maven//:junit_junit",
+        "@maven//:org_json_json",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+    test_framework = "jupiter",
+)

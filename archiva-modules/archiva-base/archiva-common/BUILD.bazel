@@ -1,0 +1,14 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-common",
+    deps = [
+        "@maven//:org_apache_commons_commons_lang3",
+        # slf4j is inherited via the archiva-base parent pom in Maven.
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+    test_deps = [
+        "@maven//:commons_io_commons_io",
+        "@maven//:org_apache_commons_commons_lang3",
+    ],
+)

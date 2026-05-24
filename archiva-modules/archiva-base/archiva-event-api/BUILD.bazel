@@ -1,0 +1,13 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-event-api",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+    test_deps = [
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+    test_framework = "jupiter",
+)

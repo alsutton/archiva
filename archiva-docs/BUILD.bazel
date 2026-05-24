@@ -1,0 +1,27 @@
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
+
+# Maven's archiva-docs runs maven-site-plugin to render .apt (Almost Plain
+# Text) + xdoc/.xml templates to a static HTML site via Doxia + Velocity.
+# The Maven Site Plugin is its own templating stack with theme inheritance
+# from parent poms; reproducing it in Bazel would be a separate project of
+# its own (no widely-used Doxia-equivalent rule exists).
+#
+# Pragmatic translation: bundle the doc sources untransformed. Site
+# rendering belongs in a downstream workflow that runs Maven (or a
+# different doc engine) outside Bazel. The tar is mostly useful as
+# evidence that the assembly-level Bazel build works for this module.
+
+pkg_files(
+    name = "doc-files",
+    srcs = glob(["src/site/**"]),
+    prefix = "archiva-docs",
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_tar(
+    name = "archiva-docs-sources",
+    srcs = [":doc-files"],
+    extension = "tar.gz",
+    visibility = ["//visibility:public"],
+)
