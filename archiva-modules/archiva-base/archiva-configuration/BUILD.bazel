@@ -1,0 +1,3 @@
+# Maven aggregator pom -- this directory has no Java code of its own; it
+# only groups child modules together under Maven. In Bazel there is nothing
+# to build here. The real targets live one level down.
