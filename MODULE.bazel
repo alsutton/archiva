@@ -100,12 +100,25 @@ maven.install(
         "org.modelmapper:modelmapper:2.4.5",
         "org.codehaus.plexus:plexus-classworlds:2.6.0",
 
+        # archiva-maven-indexer (Nexus indexer; ships its own shaded Lucene).
+        # NOTE: archiva sources reference org.apache.maven.index_shaded.lucene.*
+        # which is the package convention from indexer-core 6.0.0's
+        # shaded-lucene classifier. Version 6.2.2 renamed it to
+        # org.apache.maven.index.shaded.org.apache.lucene.*, so we have to
+        # pin to 6.0.0:shaded-lucene to match the source.
+        # Maven coordinates with classifier: group:artifact:type:classifier:version
+        "org.apache.maven.indexer:indexer-core:jar:shaded-lucene:6.0.0",
+
         # archiva-maven-model test
         "org.json:json:20211205",
         "com.fasterxml.jackson.core:jackson-databind:2.12.2",
         "com.fasterxml.jackson.core:jackson-core:2.12.2",
         "com.fasterxml.jackson.core:jackson-annotations:2.12.2",
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.12.2",
+
+        # archiva-maven-repository tests
+        "org.assertj:assertj-core:3.22.0",
+        "org.xmlunit:xmlunit-assertj3:2.8.4",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
