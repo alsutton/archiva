@@ -1,0 +1,11 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-mock",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-repository-admin/archiva-repository-admin-api",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

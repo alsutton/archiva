@@ -72,6 +72,9 @@ maven.install(
 
         # archiva-repository-layer
         "com.cronutils:cron-utils:9.1.6",
+
+        # metadata-model uses legacy javax.xml.bind annotations (not jakarta.xml.bind).
+        "javax.xml.bind:jaxb-api:2.3.1",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",

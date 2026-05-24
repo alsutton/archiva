@@ -33,6 +33,7 @@ def archiva_module(
         test_framework = "junit4",
         manual_tests = None,
         test_jvm_flags = None,
+        skip_tests = False,
         test_size = "small",
         visibility = None):
     """Defines a Maven-shaped Archiva module.
@@ -93,7 +94,7 @@ def archiva_module(
             deps = deps,
         )
 
-    if not test_srcs:
+    if not test_srcs or skip_tests:
         return
 
     native.filegroup(
