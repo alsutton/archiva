@@ -6,7 +6,7 @@ archiva_module(
         "//archiva-modules/archiva-base/archiva-proxy-api",
         "//archiva-modules/archiva-base/archiva-repository-api",
         "//archiva-modules/archiva-base/archiva-storage-api",
-        "//third_party/redback/redback-users-api",
+        "@maven//:org_apache_archiva_redback_redback_users_api",
         "@maven//:jakarta_xml_bind_jakarta_xml_bind_api",
         "@maven//:org_apache_commons_commons_collections4",
         "@maven//:org_apache_commons_commons_lang3",

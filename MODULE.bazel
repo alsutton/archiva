@@ -119,6 +119,29 @@ maven.install(
         # archiva-maven-repository tests
         "org.assertj:assertj-core:3.22.0",
         "org.xmlunit:xmlunit-assertj3:2.8.4",
+
+        # Redback 2.6.2 from Maven Central. The archiva master pom asks for
+        # 3.0.0-SNAPSHOT (sibling project, unpublished); 2.6.2 is the most
+        # recent released version and the API surface used by archiva-*
+        # modules is compatible.
+        "org.apache.archiva.redback:redback-users-api:2.6.2",
+        "org.apache.archiva.redback:redback-users-memory:2.6.2",
+        "org.apache.archiva.redback:redback-authentication-api:2.6.2",
+        "org.apache.archiva.redback:redback-authorization-api:2.6.2",
+        "org.apache.archiva.redback:redback-configuration:2.6.2",
+        "org.apache.archiva.redback:redback-policy:2.6.2",
+        "org.apache.archiva.redback:redback-keys-api:2.6.2",
+        "org.apache.archiva.redback:redback-keys-memory:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-model:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-memory:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-cached:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-role-manager:2.6.2",
+        "org.apache.archiva.redback:redback-system:2.6.2",
+        "org.apache.archiva.redback:redback-common-integrations:2.6.2",
+        "org.apache.archiva.redback:redback-integrations-security:2.6.2",
+
+        # archiva-security & web layer
+        "jakarta.servlet:jakarta.servlet-api:4.0.4",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
