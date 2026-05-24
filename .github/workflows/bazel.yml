@@ -25,17 +25,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # .bazelrc pins --java_runtime_version=remotejdk_21 so Bazel uses its
-      # own bundled JDK regardless of the system Java. setup-java is still
-      # useful to keep tool versions consistent with the Maven workflow.
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
+      - uses: actions/checkout@v6
 
       # Bazel keeps build outputs under ~/.cache/bazel and bazelisk caches
       # downloaded Bazel binaries under ~/.cache/bazelisk. Keying on the
@@ -52,14 +42,7 @@ jobs:
           restore-keys: |
             bazel-${{ runner.os }}-
 
-      - name: Install Bazelisk
-        run: |
-          set -eu
-          curl -fsSL -o /tmp/bazelisk https://github.com/bazelbuild/bazelisk/releases/download/v1.22.1/bazelisk-linux-amd64
-          chmod +x /tmp/bazelisk
-          sudo mv /tmp/bazelisk /usr/local/bin/bazelisk
-          sudo ln -sf /usr/local/bin/bazelisk /usr/local/bin/bazel
-          bazel --version
+      - uses: bazelbuild/setup-bazelisk@v3
 
       - name: Build everything
         run: bazel build //...
