@@ -37,7 +37,6 @@ jobs:
         with:
           path: |
             ~/.cache/bazel
-            ~/.cache/bazelisk
           key: bazel-${{ runner.os }}-${{ hashFiles('.bazelversion', 'MODULE.bazel', 'tools/bazel/**') }}
           restore-keys: |
             bazel-${{ runner.os }}-
