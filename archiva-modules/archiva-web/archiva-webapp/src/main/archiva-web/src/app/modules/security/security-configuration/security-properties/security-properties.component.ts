@@ -27,6 +27,7 @@ import {ToastService} from "@app/services/toast.service";
 import {ErrorResult} from "@app/model/error-result";
 
 @Component({
+  standalone: false,
     selector: 'app-security-properties',
     templateUrl: './security-properties.component.html',
     styleUrls: ['./security-properties.component.scss']
@@ -42,7 +43,7 @@ export class SecurityPropertiesComponent extends SortedTableComponent<PropertyEn
             // console.log("Retrieving data " + searchTerm + "," + offset + "," + limit + "," + orderBy + "," + order);
             return securityService.queryProperties(searchTerm, offset, limit, orderBy, order);
         });
-        super.sortField=['key']
+        this.sortField=['key']
     }
 
     ngOnInit(): void {

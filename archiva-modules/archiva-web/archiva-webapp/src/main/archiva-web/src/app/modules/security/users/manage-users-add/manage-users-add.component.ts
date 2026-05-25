@@ -27,6 +27,7 @@ import {ToastService} from "@app/services/toast.service";
 import {ErrorMessage} from "@app/model/error-message";
 
 @Component({
+  standalone: false,
     selector: 'app-manage-users-add',
     templateUrl: './manage-users-add.component.html',
     styleUrls: ['./manage-users-add.component.scss']

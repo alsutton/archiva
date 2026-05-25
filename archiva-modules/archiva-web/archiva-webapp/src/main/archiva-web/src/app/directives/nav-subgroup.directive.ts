@@ -24,6 +24,7 @@ import {Directive, ElementRef, HostListener, Renderer2} from '@angular/core';
  * This is a workaround for a bootstrap issue, when nav-items are collected in div elements.
  */
 @Directive({
+  standalone: false,
   selector: '[appNavSubgroup]'
 })
 export class NavSubgroupDirective {

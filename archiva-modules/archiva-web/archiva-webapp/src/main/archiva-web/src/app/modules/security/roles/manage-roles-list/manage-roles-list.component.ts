@@ -27,6 +27,7 @@ import {delay} from "rxjs/operators";
 import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 
 @Component({
+  standalone: false,
   selector: 'app-manage-roles-list',
   templateUrl: './manage-roles-list.component.html',
   styleUrls: ['./manage-roles-list.component.scss']

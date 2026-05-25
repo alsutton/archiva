@@ -35,9 +35,12 @@
               "src/styles.scss",
               "node_modules/@fortawesome/fontawesome-free/css/all.css"
             ],
+            "stylePreprocessorOptions": {
+              "includePaths": ["node_modules"]
+            },
             "scripts": [
               "node_modules/jquery/dist/jquery.js",
-              "node_modules/popper.js/dist/umd/popper.min.js",
+              "node_modules/@popperjs/core/dist/umd/popper.min.js",
               "node_modules/bootstrap/dist/js/bootstrap.js",
               "src/assets/params/js/index.js"
             ]
@@ -75,11 +78,11 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "archiva-web:build"
+            "buildTarget": "archiva-web:build"
           },
           "configurations": {
             "production": {
-              "browserTarget": "archiva-web:build:production"
+              "buildTarget": "archiva-web:build:production"
             }
           }
         },
@@ -126,6 +129,6 @@
           }
         }
       }
-    }},
-  "defaultProject": "archiva-web"
+    }
+  }
 }

@@ -32,6 +32,7 @@ import {zip} from "rxjs";
 import {ErrorResult} from "@app/model/error-result";
 
 @Component({
+  standalone: false,
   selector: 'app-base-security',
   templateUrl: './base-security.component.html',
   styleUrls: ['./base-security.component.scss']

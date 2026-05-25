@@ -25,6 +25,7 @@ import {PagedResult} from "@app/model/paged-result";
 import {UserService} from '@app/services/user.service';
 
 @Component({
+  standalone: false,
   selector: 'app-manage-users-list',
   templateUrl: './manage-users-list.component.html',
   styleUrls: ['./manage-users-list.component.scss']

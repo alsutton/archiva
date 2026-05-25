@@ -31,6 +31,7 @@ import {ErrorResult} from "@app/model/error-result";
 import {HttpResponse} from "@angular/common/http";
 
 @Component({
+  standalone: false,
   selector: 'app-manage-users-roles',
   templateUrl: './manage-users-roles.component.html',
   styleUrls: ['./manage-users-roles.component.scss']
