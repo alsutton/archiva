@@ -29,7 +29,6 @@ node.toolchain(node_version = "24.13.0")
 npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
 npm.npm_translate_lock(
     name = "npm",
-    npm_package_lock = "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:package-lock.json",
     pnpm_lock = "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:pnpm-lock.yaml",
     update_pnpm_lock = True,
     verify_node_modules_ignored = "//:.bazelignore",
