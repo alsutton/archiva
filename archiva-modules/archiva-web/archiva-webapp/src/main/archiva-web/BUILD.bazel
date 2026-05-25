@@ -21,10 +21,14 @@ npm_link_all_packages(name = "node_modules")
 # `bazel run //archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:serve`
 # launches the Angular dev server (`ng serve`) against the live source tree.
 # chdir = package_name() ensures ng resolves angular.json from this directory.
+# NG_CLI_ANALYTICS=false suppresses the first-run opt-in prompt; otherwise ng
+# tries to persist the answer to angular.json, which is a read-only symlink in
+# the runfiles tree and yields EACCES.
 angular_cli_bin.ng_binary(
     name = "serve",
     args = ["serve"],
     chdir = package_name(),
+    env = {"NG_CLI_ANALYTICS": "false"},
     data = [
         ":node_modules",
         "angular.json",
