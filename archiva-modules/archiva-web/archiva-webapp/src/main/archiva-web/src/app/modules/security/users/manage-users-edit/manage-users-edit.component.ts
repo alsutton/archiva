@@ -25,6 +25,7 @@ import {ManageUsersBaseComponent} from "../manage-users-base.component";
 import {ErrorResult} from "../../../../model/error-result";
 
 @Component({
+  standalone: false,
     selector: 'app-manage-users-edit',
     templateUrl: './manage-users-edit.component.html',
     styleUrls: ['./manage-users-edit.component.scss']

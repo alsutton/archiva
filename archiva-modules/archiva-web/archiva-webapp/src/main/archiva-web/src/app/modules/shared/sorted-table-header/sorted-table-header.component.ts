@@ -30,6 +30,7 @@ import {FieldToggle} from "../../../model/field-toggle";
 import { ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
+  standalone: false,
   host: { style: 'display:none'  },
   selector: 'app-th-sorted',
   templateUrl: './sorted-table-header.component.html',

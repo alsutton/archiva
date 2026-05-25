@@ -57,6 +57,7 @@ import {PaginationInfo} from "@app/model/pagination-info";
  * @typeparam T The type of the retrieved entity elements.
  */
 @Component({
+  standalone: false,
     selector: 'app-paginated-entities',
     templateUrl: './paginated-entities.component.html',
     styleUrls: ['./paginated-entities.component.scss']

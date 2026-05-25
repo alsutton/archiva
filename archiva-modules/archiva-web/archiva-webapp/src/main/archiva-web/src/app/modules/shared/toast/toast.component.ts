@@ -21,6 +21,7 @@ import {ToastService} from "@app/services/toast.service";
 import {AppNotification} from "@app/model/app-notification";
 
 @Component({
+  standalone: false,
   selector: 'app-toasts',
   template: `
     <ngb-toast

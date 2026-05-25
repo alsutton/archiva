@@ -33,6 +33,7 @@ import {SortedTableHeaderComponent} from "../sorted-table-header/sorted-table-he
 import { delay, startWith } from 'rxjs/operators';
 
 @Component({
+  standalone: false,
   selector: 'tr[sorted]',
   templateUrl: './sorted-table-header-row.component.html',
   styleUrls: ['./sorted-table-header-row.component.scss']

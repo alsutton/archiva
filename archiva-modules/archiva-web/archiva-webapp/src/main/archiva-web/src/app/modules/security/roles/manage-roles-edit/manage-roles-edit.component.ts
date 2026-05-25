@@ -40,6 +40,7 @@ import { ElementRef } from '@angular/core';
 import { GroupService } from '@app/services/group.service';
 
 @Component({
+  standalone: false,
     selector: 'app-manage-roles-edit',
     templateUrl: './manage-roles-edit.component.html',
     styleUrls: ['./manage-roles-edit.component.scss']

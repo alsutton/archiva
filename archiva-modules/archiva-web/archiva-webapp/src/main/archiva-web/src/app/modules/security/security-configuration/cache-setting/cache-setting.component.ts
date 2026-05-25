@@ -27,6 +27,7 @@ import {HttpResponse} from "@angular/common/http";
 import {ErrorResult} from "@app/model/error-result";
 
 @Component({
+  standalone: false,
     selector: 'app-cache-setting',
     templateUrl: './cache-setting.component.html',
     styleUrls: ['./cache-setting.component.scss']

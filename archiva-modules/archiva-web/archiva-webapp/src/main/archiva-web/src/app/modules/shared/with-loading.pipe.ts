@@ -22,6 +22,7 @@ import {catchError, map, startWith} from 'rxjs/operators';
 import {LoadingValue} from "@app/modules/shared/model/loading-value";
 
 @Pipe({
+  standalone: false,
   name: 'withLoading'
 })
 export class WithLoadingPipe implements PipeTransform {

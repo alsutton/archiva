@@ -22,6 +22,7 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {UserService} from "../../../../services/user.service";
 
 @Component({
+  standalone: false,
   selector: 'app-manage-users-delete',
   templateUrl: './manage-users-delete.component.html',
   styleUrls: ['./manage-users-delete.component.scss']
