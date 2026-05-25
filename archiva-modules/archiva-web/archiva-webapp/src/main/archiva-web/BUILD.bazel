@@ -36,6 +36,9 @@ angular_cli_bin.ng_binary(
         "tsconfig.json",
         "tsconfig.spec.json",
         "tslint.json",
+        "//archiva-docs:archiva-docs-sources",
+        "//archiva-docs:rendered-html",
+        "//archiva-docs:resources",
     ] + glob([
         "src/**/*",
         "e2e/**/*",

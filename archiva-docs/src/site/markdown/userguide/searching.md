@@ -1,0 +1,91 @@
+# Searching
+
+The Search functionality of Archiva allows a user to search for specific artifact references in the repository.
+
+## Indexing
+
+Before artifacts can be searched in Archiva, they need to be indexed first. Aritfacts are indexed during
+these instances:
+
+- when a repository is scanned
+
+- when an artifact is deployed or uploaded in the repository
+
+- when an artifact is proxied or downloaded from a remote repository
+
+- when remote index is available and downloaded
+
+During repository scanning, the `index-content` consumer (see [Consumers](../adminguide/consumers.html)) creates an
+indexing task and queues it in an indexing task queue. This indexing task is in turn executed by a task executor and
+that's where the actual indexing happens. A similar indexing task is also created and queued as artifacts are deployed
+in the Archiva repository or proxied from a remote repository. The reason behind this is to avoid multiple or simultaneous
+update of the index (a repository scan might be executing while artifacts are being deployed in the repository). *Note:*
+This behavior applies for versions starting 1.2.1.
+
+## What Can Be Searched?
+
+The repository files that are indexed during repository scan can be configured in the Repository Scanning page, in the
+Repository Scanning - File Types section (indexable-content). By default, the indexable-content file types are:
+
+```
+**/*.txt
+**/*.TXT
+**/*.block
+**/*.config
+**/*.pom
+**/*.xml
+**/*.xsd
+**/*.dtd
+**/*.tld
+```
+
+## Quick Search
+
+The contents of all the files in the repository that matches the above configuration will be indexed during repository
+scan. So when you type a word in the search box, Archiva will search the index for that query string and
+return all the search hits in the form of a paginated list of artifacts.
+For example you typed in 'ant', the search result would contain the list of artifacts that use or
+reference 'ant'.
+
+For query strings containing whitespaces, Archiva searches for the query string including the whitespaces.
+So if you typed in 'commons logging', the search result would contain the list of artifacts that
+reference 'commons logging' which is still separated by whitespace.
+In this case, 'commons-logging' (hyphen separated) is not included in the search results.
+
+Archiva can also search the index for java classes, packages, and methods and return a list of artifacts containing the
+query string. In the previous versions, we need to append the keyword 'bytecode:' before the query string in the search box
+(like 'bytecode:myMethod'). But since version 1.2, we no longer need to type the keyword. Just type the java class or package name
+in the search box.. and voila!
+
+You can use various criterias to search artifacts:
+
+### Simple Query string
+
+![search-simple](../images/search-simple.png)
+
+### Advanced Paramters
+
+![search-advanced](../images/search-advanced.png)
+
+### OSGI Parameters
+
+![search-osgi](../images/search-osgi.png)
+
+## *Search results
+
+You can apply various filters on the search results.
+
+Below is a sample screenshot of the search results:
+
+![Search Results](../images/search-results.png)
+
+When the user clicks a specific artifact in the search results list, Archiva will direct the user in the Artifact Info
+page (the same page from the Repository Browse). Otherwise if it is not a pom file (ex. metadata.xml), the file will
+appear as a file to be downloaded from the browser.
+
+## Security
+
+The Search functionality respects the repository permissions. If the user is not logged in to Archiva and does a search,
+only those repositories with guest permissions will be searched for the query string. And if the user is logged in to
+Archiva and does a search, only those repositories in which that user has permission to access will be searched for the
+query string.
