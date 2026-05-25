@@ -1,6 +1,9 @@
 {
   "name": "archiva-web",
   "version": "0.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": []
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
