@@ -1,4 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_library")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//tools/bazel:war.bzl", "java_war")
 
 # Aggregator java_library to collect the runtime classpath. We harvest
@@ -49,4 +50,15 @@ java_war(
     deps = [":archiva-webapp-runtime"],
     webapp_files = glob(["src/main/webapp/**"]),
     webapp_root = "src/main/webapp",
+)
+
+# Angular dev server for the archiva-web frontend living at
+# src/main/archiva-web. `bazel run :serve` shells out to the host's
+# npm/Node to launch `ng serve` against the live source tree -- a
+# hermetic Node toolchain isn't wired into the Bazel workspace, in
+# keeping with this POC's "Bazel sits beside Maven, not under it"
+# approach.
+sh_binary(
+    name = "serve",
+    srcs = ["serve-archiva-web.sh"],
 )
