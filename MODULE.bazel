@@ -9,7 +9,7 @@ module(
     version = "3.0.0-SNAPSHOT",
 )
 
-bazel_dep(name = "rules_java", version = "8.6.1")
+bazel_dep(name = "rules_java", version = "9.6.1")
 bazel_dep(name = "rules_jvm_external", version = "6.5")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 
