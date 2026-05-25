@@ -20,7 +20,7 @@ bazel_dep(name = "rules_nodejs", version = "6.7.4")
 # under archiva-modules/.../archiva-web/package.json devDependencies) requires
 # Node 20+.
 node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
-node.toolchain(node_version = "20.18.0")
+node.toolchain(node_version = "24.13.0")
 
 # Translate the existing npm package-lock.json into a pnpm-style lock that
 # aspect_rules_js consumes. update_pnpm_lock=True lets Bazel regenerate
