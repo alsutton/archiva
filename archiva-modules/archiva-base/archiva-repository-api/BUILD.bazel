@@ -1,0 +1,19 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-repository-api",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-event-api",
+        "//archiva-modules/archiva-base/archiva-model",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//third_party/archiva-components/spring-registry-api",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

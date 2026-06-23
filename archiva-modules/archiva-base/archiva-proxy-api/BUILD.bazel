@@ -1,0 +1,13 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-proxy-api",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-policies",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+    ],
+    test_deps = [
+        "@maven//:junit_junit",
+    ],
+)

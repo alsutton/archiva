@@ -1,14 +1,18 @@
 oak-jcr-lucene
 ==============
 
+Historically this module repackaged the `oak-lucene` dependency, relocating
+its Apache Lucene 4 classes into `shaded_oak.org.apache.lucene` so that newer
+Lucene releases on Archiva's classpath would not clash with Jackrabbit Oak's
+bundled (and effectively end-of-life) Lucene 4.
 
-This module is only to provide the oak-lucene dependency with lucene shaded into a different
-java package. 
-Jackrabbit Oak has dependencies to Apache Lucene 4, which is very old and merely out of support.
+Under the Maven build that relocation was done with `maven-shade-plugin`, and
+`oak-lucene` itself was excluded from the pom since it is a fat jar that
+already includes the Lucene classes.
 
-We move the lucene dependencies to the package shaded_oak.org.apache.lucene to allow using
-a more recent version for Archiva.
-
-For some reason the oak-lucene (1.22.3) package is a fat jar that contains the lucene classes itself,
-therefore we are excluding the lucene dependencies in the pom.
-
+The Bazel build does not currently perform the shading. There is no
+ruleset wired up for jarjar / ASM-based bytecode rewriting in this repo, so
+the module produces no jar of its own under Bazel. See the "What's wired vs
+not" section of the top-level [BAZEL.md](../../../../../BAZEL.md) for the
+broader context (item 3, "Oak Lucene shading"). Modules that need the
+shaded classes are currently tagged `manual` on the Bazel side.

@@ -1,0 +1,65 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_filegroup", "pkg_files", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//tools/bazel:markdown_site.bzl", "markdown_to_html")
+
+# The source docs live in src/site/markdown (one-shot converted from the
+# original Maven APT under src/site/apt via tools/bazel/apt_to_md.py).
+# tools/bazel/md_to_html.py renders each .md to .html and the strip_prefix
+# arrangement below places the rendered html and the static resources
+# side-by-side at the doc-site root, matching how the Maven site plugin
+# laid the output out.
+
+_MD_SRCS = glob(["src/site/markdown/**/*.md"])
+
+_RESOURCES = glob(["src/site/resources/**"])
+
+markdown_to_html(
+    name = "rendered-html",
+    srcs = _MD_SRCS,
+    strip_prefix = "src/site/markdown",
+    renderer = "//tools/bazel:md_to_html.py",
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "resources",
+    srcs = _RESOURCES,
+    visibility = ["//visibility:public"],
+)
+
+# Combined target for consumers that want both the rendered html pages
+# and the static resources at the same layout (e.g. css/site.css, images/*).
+pkg_files(
+    name = "_html-files",
+    srcs = [":rendered-html"],
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_files(
+    name = "_resource-files",
+    srcs = _RESOURCES,
+    strip_prefix = strip_prefix.from_pkg("src/site/resources"),
+)
+
+pkg_filegroup(
+    name = "archiva-docs-site",
+    srcs = [
+        ":_html-files",
+        ":_resource-files",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar(
+    name = "archiva-docs-sources",
+    srcs = [":archiva-docs-site"],
+    extension = "tar.gz",
+    visibility = ["//visibility:public"],
+)
+
+js_library(
+    name = "archiva-docs-js",
+    srcs = [":archiva-docs-site"],
+    visibility = ["//visibility:public"],
+)

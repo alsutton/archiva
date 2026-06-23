@@ -1,0 +1,30 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-filelock",
+    deps = [
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+    test_deps = [
+        "@maven//:com_googlecode_multithreadedtc_multithreadedtc",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_test",
+    ],
+    runtime_test_deps = [
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        "@maven//:org_apache_logging_log4j_log4j_jcl",
+        "@maven//:org_springframework_spring_beans",
+    ],
+    # These tests rely on surefire systemPropertyVariables (buildDirectory=
+    # ${project.build.directory}) and a `src/test/cassandra-all-2.0.3.jar`
+    # fixture that isn't in the tree. Re-enable once the test is rewritten
+    # to use java.io.tmpdir and a checked-in fixture.
+    manual_tests = {
+        "src/test/java/org/apache/archiva/common/filelock/DefaultFileLockManagerTest.java": ["manual"],
+        "src/test/java/org/apache/archiva/common/filelock/DefaultFileLockManagerTimeoutTest.java": ["manual"],
+    },
+)

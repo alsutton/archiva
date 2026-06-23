@@ -1,0 +1,35 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "metadata-repository-api",
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/plugins/generic-metadata-support",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_archiva_redback_redback_users_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_commons_commons_collections4",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_test",
+    ],
+    test_framework = "jupiter",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-policies",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//archiva-modules/archiva-base/archiva-xml-tools",
+        "//archiva-modules/metadata/metadata-model",
+        "//third_party/archiva-components/spring-cache-api",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_collections4",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_beans",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

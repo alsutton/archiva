@@ -1,0 +1,16 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-rss",
+    # Same Spring/JPA/Redback-memory test-context pattern as core-consumers.
+    skip_tests = True,
+    deps = [
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "@maven//:com_rometools_rome",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

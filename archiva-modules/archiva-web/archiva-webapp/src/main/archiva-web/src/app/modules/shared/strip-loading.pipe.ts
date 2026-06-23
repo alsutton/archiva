@@ -22,6 +22,7 @@ import {catchError, filter, map, startWith, tap} from "rxjs/operators";
 import {LoadingValue} from "@app/modules/shared/model/loading-value";
 
 @Pipe({
+  standalone: false,
   name: 'stripLoading'
 })
 export class StripLoadingPipe implements PipeTransform {

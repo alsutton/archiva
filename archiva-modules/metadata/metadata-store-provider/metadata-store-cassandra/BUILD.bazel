@@ -1,0 +1,27 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "metadata-store-cassandra",
+    # Tests boot a live Cassandra (or embedded one); not wired here.
+    skip_tests = True,
+    deps = [
+        "//archiva-modules/archiva-base/archiva-checksum",
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-maven/archiva-maven-metadata",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//archiva-modules/metadata/metadata-statistics-api",
+        "//archiva-modules/plugins/generic-metadata-support",
+        "@maven//:com_datastax_oss_java_driver_core",
+        "@maven//:com_datastax_oss_java_driver_query_builder",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_modelmapper_modelmapper",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_beans",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

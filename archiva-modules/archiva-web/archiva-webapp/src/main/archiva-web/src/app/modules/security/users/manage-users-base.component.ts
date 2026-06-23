@@ -45,21 +45,22 @@ export class ManageUsersBaseComponent {
     user: string;
     formInitialValues;
 
-    userForm = this.fb.group({
-        user_id: ['', [Validators.required, Validators.minLength(this.minUserIdSize), whitespaceValidator()], this.userUidExistsValidator()],
-        full_name: ['', Validators.required],
-        email: ['', [Validators.required, Validators.email]],
-        locked: [false],
-        password_change_required: [true],
-        password: [''],
-        confirm_password: [''],
-        validated: [true]
-    }, {
-        validator: MustMatch('password', 'confirm_password')
-    })
+    userForm: FormGroup;
 
     constructor(public userService: UserService, public fb: FormBuilder) {
-        this.formInitialValues=this.userForm.value
+        this.userForm = this.fb.group({
+            user_id: ['', [Validators.required, Validators.minLength(this.minUserIdSize), whitespaceValidator()], this.userUidExistsValidator()],
+            full_name: ['', Validators.required],
+            email: ['', [Validators.required, Validators.email]],
+            locked: [false],
+            password_change_required: [true],
+            password: [''],
+            confirm_password: [''],
+            validated: [true]
+        }, {
+            validator: MustMatch('password', 'confirm_password')
+        });
+        this.formInitialValues = this.userForm.value;
     }
 
 

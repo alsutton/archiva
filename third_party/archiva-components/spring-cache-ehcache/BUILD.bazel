@@ -1,0 +1,16 @@
+load("@rules_java//java:defs.bzl", "java_library")
+
+java_library(
+    name = "spring-cache-ehcache",
+    srcs = glob(["src/main/java/**/*.java"]),
+    resources = glob(["src/main/resources/**"]),
+    resource_strip_prefix = "third_party/archiva-components/spring-cache-ehcache/src/main/resources",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//third_party/archiva-components/spring-cache-api",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:org_ehcache_ehcache",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

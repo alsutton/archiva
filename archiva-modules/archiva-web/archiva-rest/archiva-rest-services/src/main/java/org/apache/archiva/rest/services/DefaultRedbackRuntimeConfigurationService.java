@@ -326,7 +326,7 @@ public class DefaultRedbackRuntimeConfigurationService
                 {
                     ldapConnection.close();
                 }
-                catch ( NamingException e )
+                catch ( Exception e )
                 {
                     log.error( "Could not close connection: {}", e.getMessage( ), e );
                 }
@@ -379,7 +379,7 @@ public class DefaultRedbackRuntimeConfigurationService
             log.warn( "fail to get ldapConnection: {}", e.getMessage(), e );
             throw new ArchivaRestServiceException( e.getMessage(), e );
         }
-        catch ( NamingException e )
+        catch ( Exception e )
         {
             log.error( "Could not close connection: {}", e.getMessage( ), e );
         }
@@ -392,7 +392,7 @@ public class DefaultRedbackRuntimeConfigurationService
                 {
                     ldapConnection.close();
                 }
-                catch ( NamingException e )
+                catch ( Exception e )
                 {
                     log.error( "Could not close connection: {}", e.getMessage( ), e );
                 }

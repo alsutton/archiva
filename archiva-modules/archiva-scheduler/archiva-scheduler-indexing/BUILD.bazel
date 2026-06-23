@@ -1,0 +1,13 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-scheduler-indexing",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-api",
+        "//third_party/archiva-components/spring-taskqueue",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

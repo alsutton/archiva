@@ -1,0 +1,25 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-storage-fs",
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-filelock",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "@maven//:commons_io_commons_io",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-filelock",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        # Test base classes (AbstractStorageUtilTest) live in storage-api's test sources.
+        "//archiva-modules/archiva-base/archiva-storage-api:test-lib",
+        "@maven//:commons_io_commons_io",
+        "@maven//:junit_junit",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+    ],
+    # Tests are a mix of JUnit 4 (legacy) and Jupiter (newer); the platform
+    # launcher discovers both.
+    test_framework = "jupiter",
+)

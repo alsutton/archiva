@@ -54,7 +54,7 @@
     <property name="archivaConfiguration" ref="archivaConfiguration#cleanup-released-snapshots"/>
   </bean>
 
-  <bean name="commons-configuration" class="org.apache.archiva.components.registry.commons.CommonsConfigurationRegistry">
+  <bean name="archiva-commons-configuration" class="org.apache.archiva.components.registry.commons.CommonsConfigurationRegistry">
     <property name="initialConfiguration">
       <value>
         <![CDATA[

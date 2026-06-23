@@ -1,0 +1,10 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "metadata-statistics-api",
+    deps = [
+        "//archiva-modules/archiva-maven/archiva-maven-metadata",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+    ],
+)

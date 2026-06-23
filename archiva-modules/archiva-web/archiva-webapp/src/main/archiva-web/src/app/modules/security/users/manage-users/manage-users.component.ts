@@ -22,6 +22,7 @@ import {merge, Observable} from "rxjs";
 import {map} from 'rxjs/operators';
 
 @Component({
+  standalone: false,
   selector: 'app-manage-users',
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']

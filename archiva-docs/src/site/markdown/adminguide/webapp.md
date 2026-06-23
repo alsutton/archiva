@@ -1,0 +1,136 @@
+# Installing Apache Archiva as a Web Application
+
+Archiva can be deployed as a web application into any Java EE application server. This document will show an
+example of doing so with Apache Tomcat 5.5, 6.0.x and 7.0.x.
+
+You can find information about additional application servers on [the archiva wiki](https://cwiki.apache.org/confluence/display/ARCHIVA/HOWTO+run+Archiva+on+your+Application+Server+or+Database).
+
+**Note**: When you first start Archiva, you will see an Exception that schema SA does not exist - however it doesn't
+cause a problem. If you use a username other than 'sa', such as 'archiva', then you seem to get the same error but
+Tomcat fails to start the context and you have to shutdown and restart again.
+
+## To deploy Archiva on Apache Tomcat 5.5, 6.0 and 7.0.x
+
+- Create a directory in tomcat called archiva, at the same level as bin, conf, logs and the others.
+
+- Copy the war file into the new directory
+
+- Create a `<tomcat home>/conf/Catalina/localhost/archiva.xml` file with the following data (replace the database paths with a suitable location). When using
+Tomcat 6.0+, do not include the first line (XML encoding) in the `archiva.xml` configuration specified below to avoid parsing errors during startup:
+
+```
+ <?xml version="1.0" encoding="UTF-8"?>
+ <Context path="/archiva"
+          docBase="${catalina.home}/archiva/apache-archiva-1.1.war">
+
+ <Resource name="jdbc/users" auth="Container" type="javax.sql.DataSource"
+           username="sa"
+           password=""
+           driverClassName="org.apache.derby.jdbc.EmbeddedDriver"
+           url="jdbc:derby:/path/to/database/users;create=true" />
+
+ <Resource name="mail/Session" auth="Container"
+            type="javax.mail.Session"
+            mail.smtp.host="localhost"/>
+ </Context>
+```
+
+- Install `derby-10.1.3.1.jar` (or later), `activation-1.1.jar` and `mail-1.4.jar` into the Tomcat 5.5 `common/lib` or Tomcat 6.0 `lib` directory.
+This is required since the data sources are instantiated before the web application.
+
+**Note**: Tomcat 5.5.20 and 5.5.23 are missing MailSessionFactory and a
+few other classes.  JNDI mail sessions will *not* work.  Use Tomcat 5.5.25
+instead, or see [Bug 40668](http://issues.apache.org/bugzilla/show_bug.cgi?id=40668) for a workaround.
+
+- The ${appserver.base} java property is used by the Archiva internal logging configuration to determine where to output its logs to.
+It is important to define this property either in the $CATALINA_OPTS system environment variable if Tomcat is being launched via the
+command line) or the service properties (if being launched as a service or daemon). The format typically expected is
+-Dappserver.base=*SOMEWHERE*. In this example, we'll put the logs in Tomcat's `logs` directory so we need to set appserver.base
+property to where Tomcat is installed:
+
+```
+export CATALINA_OPTS="-Dappserver.home=$CATALINA_HOME -Dappserver.base=$CATALINA_HOME" (for UNIX)
+
+OR
+
+set CATALINA_OPTS="-Dappserver.home=%CATALINA_HOME% -Dappserver.base=%CATALINA_HOME%" (for Windows)
+```
+
+- If setting the ${appserver.base} and ${appserver.home} using the previous step does not work, you can set it in the unpacked Archiva web application's
+`WEB-INF/classes/application.properties` as follows:
+
+```
+# for Windows:
+appserver.base=%CATALINA_HOME%
+appserver.base=%CATALINA_BASE%
+
+# or, for UNIX:
+appserver.base=$CATALINA_HOME
+appserver.home=$CATALINA_BASE
+```
+
+- When running Tomcat as a **Windows** service, you need to edit `regedit` and then, in
+`HKEY_LOCAL_MACHINE > SOFTWARE > Apache Software Foundation > Procrun 2.0 > TomcatX > Parameters > Java`, modify
+the `Options` variable. Set the ${appserver.base} property by adding the following parameters at the end:
+
+```
+-Dappserver.base=%CATALINA_HOME% -Dappserver.home=%CATALINA_HOME%
+```
+
+For more information, see [Archiva on Tomcat](http://cwiki.apache.org/confluence/display/ARCHIVA/Archiva+on+Tomcat) in the wiki.
+
+## Archiva Configuration
+
+Archiva is configured using the `~/.m2/archiva.xml` configuration file by default when using a Java EE application server.
+
+## Upgrading Archiva
+
+To upgrade the Archiva web application, simply replace the web application with an alternative. Since the database and configuration files are stored
+externally to the application, no further maintainance is needed.
+
+For general information about upgrading Archiva, see the relevant section in the [Installing standalone](./standalone.html#Upgrading%20Archiva) guide.
+
+## Configuring and Running Archiva
+
+Once Archiva is running, it is configured in the same way as the standalone instance. See the [quick start](../quick-start.html#Setting%20up%20your%20Archiva%20instance) guide for more information.
+
+## Troubleshooting
+
+## Error During Startup
+
+There are cases when the Tomcat logs only shows the following error during startup:
+
+```
+...
+Aug 17, 2009 11:04:02 AM org.apache.catalina.core.StandardContext start
+SEVERE: Error listenerStart
+Aug 17, 2009 11:04:02 AM org.apache.catalina.core.StandardContext start
+SEVERE: Context [/archiva] startup failed due to previous errors
+Aug 17, 2009 11:04:04 AM org.apache.coyote.http11.Http11BaseProtocol start
+...
+```
+
+One of the common causes for this `listenerStart Error` is a failure during Spring's initialization. One way to diagnose or confirm the
+exact cause of the error is by adding the following configuration to the unpacked Archiva webapp's `WEB-INF/classes/log4j2.xml`:
+
+```
+    <appenders>
+
+      <Console name="console" target="SYSTEM_OUT">
+        <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      </Console>
+
+    </appenders>
+
+    <logger name="org.springframework.web" level="debug">
+      <appender-ref ref="console"/>
+    </logger>
+```
+
+The above configuration directs Spring's output logs to the Tomcat console and be recorded in Tomcat's log files.
+
+## Diagnosing Errors
+
+One of the least decipherable errors you can get from Tomcat is a `404` when the deployment fails. In `<tomcat home>/logs/catalina.out`  you will only find that it fails, but not why. Also Archiva's logs will not tell you.
+
+The log messages and stack traces in case of a `404` can be found in `<tomcat home>/logs/localhost.<date>`.

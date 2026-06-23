@@ -1,0 +1,65 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Bazel CI
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Bazel keeps build outputs under ~/.cache/bazel and bazelisk caches
+      # downloaded Bazel binaries under ~/.cache/bazelisk. Keying on the
+      # things that actually change the build graph -- MODULE.bazel,
+      # .bazelversion, and the Starlark in tools/bazel -- gets near-full
+      # cache hits on unrelated source changes.
+      - name: Mount Bazel cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cache/bazel
+          key: bazel-${{ runner.os }}-${{ hashFiles('.bazelversion', 'MODULE.bazel', 'tools/bazel/**') }}
+          restore-keys: |
+            bazel-${{ runner.os }}-
+
+      - uses: bazelbuild/setup-bazelisk@v3
+
+      - name: Build everything
+        run: bazel build //...
+
+      - name: Test everything
+        run: bazel test //... --test_output=errors
+
+      # Spot-check that the assembled deployables still produce. These have
+      # passed all along via //... but exercising them explicitly makes a
+      # regression in the WAR/distribution/CLI obvious from the CI log.
+      - name: Verify deployables
+        run: |
+          bazel build \
+            //archiva-cli:archiva-cli \
+            //archiva-modules/archiva-web/archiva-webapp:archiva \
+            //archiva-jetty:archiva-jetty-dist \
+            //archiva-docs:archiva-docs-sources
+          ls -lh \
+            bazel-bin/archiva-cli/archiva-cli.jar \
+            bazel-bin/archiva-modules/archiva-web/archiva-webapp/archiva.war \
+            bazel-bin/archiva-jetty/archiva-jetty-dist.tar.gz \
+            bazel-bin/archiva-docs/archiva-docs-sources.tar.gz

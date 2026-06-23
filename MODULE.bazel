@@ -1,0 +1,230 @@
+"""Archiva — Bazel proof-of-concept.
+
+Only `archiva-common` and `archiva-checksum` are wired up so far.
+The rest of the project continues to build with Maven.
+"""
+
+module(
+    name = "archiva",
+    version = "3.0.0-SNAPSHOT",
+)
+
+bazel_dep(name = "rules_java", version = "9.6.1")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "rules_pkg", version = "1.2.0")
+bazel_dep(name = "rules_shell", version = "0.8.0")
+bazel_dep(name = "aspect_rules_js", version = "3.2.2")
+bazel_dep(name = "rules_nodejs", version = "6.7.4")
+
+# Node.js toolchain for the archiva-web Angular frontend. Angular 21 (declared
+# under archiva-modules/.../archiva-web/package.json devDependencies) requires
+# Node 20+.
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "24.13.0")
+
+# Translate the existing npm package-lock.json into a pnpm-style lock that
+# aspect_rules_js consumes. update_pnpm_lock=True lets Bazel regenerate
+# pnpm-lock.yaml from package-lock.json on demand, so the npm lockfile stays
+# the source of truth for the JS side.
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:pnpm-lock.yaml",
+    update_pnpm_lock = True,
+    verify_node_modules_ignored = "//:.bazelignore",
+    data = [
+        "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:package.json",
+    ],
+)
+use_repo(npm, "npm")
+
+maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
+maven.install(
+    name = "maven",
+    artifacts = [
+        # Versions mirror archiva's root pom.xml properties block.
+        "org.apache.commons:commons-lang3:3.12.0",
+        "commons-io:commons-io:2.11.0",
+        "commons-codec:commons-codec:1.15",
+        "org.slf4j:slf4j-api:1.7.36",
+        "org.apache.logging.log4j:log4j-slf4j-impl:2.17.1",
+        "org.apache.logging.log4j:log4j-api:2.17.1",
+        "org.apache.logging.log4j:log4j-core:2.17.1",
+        "jakarta.annotation:jakarta.annotation-api:1.3.5",
+        "jakarta.xml.bind:jakarta.xml.bind-api:2.3.3",
+
+        # Test scope
+        "junit:junit:4.13.2",
+        "org.hamcrest:hamcrest-core:1.3",
+
+        # archiva-test-utils
+        "org.springframework:spring-test:5.3.22",
+        "org.springframework:spring-core:5.3.22",
+        "org.xmlunit:xmlunit-core:2.8.4",
+        "org.junit.platform:junit-platform-console-standalone:1.5.2",
+
+        # archiva-storage-api
+        "org.junit.jupiter:junit-jupiter-api:5.5.2",
+        "org.junit.jupiter:junit-jupiter-engine:5.5.2",
+        "org.mockito:mockito-core:3.4.0",
+        "org.mockito:mockito-junit-jupiter:3.4.0",
+
+        # archiva-filelock
+        "org.springframework:spring-context:5.3.22",
+        "org.springframework:spring-beans:5.3.22",
+        "javax.inject:javax.inject:1",
+        "org.apache.logging.log4j:log4j-jcl:2.17.1",
+        "com.googlecode.multithreadedtc:multithreadedtc:1.01",
+
+        # archiva-model uses commons-collections4 transitively
+        "org.apache.commons:commons-collections4:4.4",
+
+        # archiva-policies + vendored archiva-components/spring-cache-ehcache
+        "jakarta.inject:jakarta.inject-api:1.0",
+        "jakarta.annotation:jakarta.annotation-api:1.3.5",
+        "org.ehcache:ehcache:3.9.9",
+
+        # Vendored archiva-components/spring-registry-commons
+        "org.apache.commons:commons-configuration2:2.7",
+        "org.apache.commons:commons-text:1.9",
+        # commons-configuration2 reflectively needs beanutils at runtime.
+        "commons-beanutils:commons-beanutils:1.9.4",
+
+        # Vendored archiva-components/spring-quartz
+        "org.quartz-scheduler:quartz:2.3.2",
+
+        # Vendored archiva-components/spring-taskqueue
+        "org.codehaus.plexus:plexus-utils:3.2.1",
+
+        # archiva-repository-layer
+        "com.cronutils:cron-utils:9.1.6",
+
+        # metadata-model uses legacy javax.xml.bind annotations (not jakarta.xml.bind).
+        "javax.xml.bind:jaxb-api:2.3.1",
+
+        # archiva-maven-repository + maven submodules. Versions from the root
+        # pom.xml properties block (maven3x.version, maven.resolver.version,
+        # wagon.version, httpclient.version).
+        "org.apache.maven:maven-core:3.8.1",
+        "org.apache.maven:maven-model:3.8.1",
+        "org.apache.maven:maven-model-builder:3.8.1",
+        "org.apache.maven:maven-artifact:3.8.1",
+        "org.apache.maven:maven-repository-metadata:3.8.1",
+        "org.apache.maven:maven-compat:3.8.1",
+        "org.apache.maven.resolver:maven-resolver-api:1.6.2",
+        "org.apache.maven.resolver:maven-resolver-impl:1.6.2",
+        "org.apache.maven:maven-resolver-provider:3.8.1",
+        "org.apache.maven.resolver:maven-resolver-connector-basic:1.6.2",
+        "org.apache.maven.resolver:maven-resolver-util:1.6.2",
+        "org.apache.maven.resolver:maven-resolver-spi:1.6.2",
+        "org.apache.maven.wagon:wagon-provider-api:3.3.3",
+        "org.apache.maven.wagon:wagon-http:3.3.3",
+        "org.apache.maven.wagon:wagon-http-lightweight:3.3.3",
+        "org.apache.maven.wagon:wagon-http-shared:3.3.3",
+        "org.apache.httpcomponents:httpclient:4.5.13",
+        "org.apache.httpcomponents:httpcore:4.4.15",
+        "org.modelmapper:modelmapper:2.4.5",
+        "org.codehaus.plexus:plexus-classworlds:2.6.0",
+
+        # archiva-maven-indexer (Nexus indexer; ships its own shaded Lucene).
+        # NOTE: archiva sources reference org.apache.maven.index_shaded.lucene.*
+        # which is the package convention from indexer-core 6.0.0's
+        # shaded-lucene classifier. Version 6.2.2 renamed it to
+        # org.apache.maven.index.shaded.org.apache.lucene.*, so we have to
+        # pin to 6.0.0:shaded-lucene to match the source.
+        # Maven coordinates with classifier: group:artifact:type:classifier:version
+        "org.apache.maven.indexer:indexer-core:jar:shaded-lucene:6.0.0",
+
+        # archiva-maven-model test
+        "org.json:json:20211205",
+        "com.fasterxml.jackson.core:jackson-databind:2.12.2",
+        "com.fasterxml.jackson.core:jackson-core:2.12.2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.12.2",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.12.2",
+
+        # archiva-maven-repository tests
+        "org.assertj:assertj-core:3.22.0",
+        "org.xmlunit:xmlunit-assertj3:2.8.4",
+
+        # Redback 2.6.2 from Maven Central. The archiva master pom asks for
+        # 3.0.0-SNAPSHOT (sibling project, unpublished); 2.6.2 is the most
+        # recent released version and the API surface used by archiva-*
+        # modules is compatible.
+        "org.apache.archiva.redback:redback-users-api:2.6.2",
+        "org.apache.archiva.redback:redback-users-memory:2.6.2",
+        "org.apache.archiva.redback:redback-authentication-api:2.6.2",
+        "org.apache.archiva.redback:redback-authorization-api:2.6.2",
+        "org.apache.archiva.redback:redback-configuration:2.6.2",
+        "org.apache.archiva.redback:redback-policy:2.6.2",
+        "org.apache.archiva.redback:redback-keys-api:2.6.2",
+        "org.apache.archiva.redback:redback-keys-memory:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-model:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-memory:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-cached:2.6.2",
+        "org.apache.archiva.redback:redback-rbac-role-manager:2.6.2",
+        "org.apache.archiva.redback:redback-system:2.6.2",
+        "org.apache.archiva.redback:redback-common-integrations:2.6.2",
+        "org.apache.archiva.redback:redback-integrations-security:2.6.2",
+
+        # archiva-security & web layer
+        "jakarta.servlet:jakarta.servlet-api:4.0.4",
+        "jakarta.ws.rs:jakarta.ws.rs-api:2.1.6",
+
+        # archiva-web-common
+        "com.rometools:rome:1.16.0",
+        "org.jsoup:jsoup:1.14.2",
+        "org.apache.cxf:cxf-rt-rs-extension-providers:3.3.11",
+        "org.apache.cxf:cxf-rt-frontend-jaxrs:3.3.11",
+        "org.apache.archiva.redback:redback-common-ldap:2.6.2",
+        "org.springframework:spring-web:5.3.22",
+        "org.springframework:spring-tx:5.3.22",
+
+        # archiva-rest-api
+        "io.swagger.core.v3:swagger-annotations:2.1.10",
+
+        # archiva-rest-services (Jackson XML + datetime modules)
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2",
+        "jakarta.validation:jakarta.validation-api:2.0.2",
+        "org.apache.archiva.redback:redback-rest-api:2.6.2",
+        "org.apache.archiva.redback:redback-rest-services:2.6.2",
+
+        # archiva-webdav
+        "org.apache.jackrabbit:jackrabbit-webdav:2.20.2",
+        "org.apache.jackrabbit:jackrabbit-jcr-commons:2.20.2",
+
+        # archiva-cli (sampullara-style cli-parser)
+        "com.google.code.cli-parser:cli:7",
+
+        # archiva-jetty distribution: jetty-runner ships a self-contained
+        # JAR that boots embedded Jetty and deploys a WAR by CLI arg.
+        "org.eclipse.jetty:jetty-runner:9.4.43.v20210629",
+
+        # metadata-store-jcr: Apache Oak (the JCR implementation that backs
+        # archiva's metadata store) + Jackrabbit JCR.
+        "org.apache.jackrabbit:oak-jcr:1.40.0",
+        "org.apache.jackrabbit:oak-core:1.40.0",
+        "org.apache.jackrabbit:oak-store-spi:1.40.0",
+        "org.apache.jackrabbit:oak-core-spi:1.40.0",
+        "org.apache.jackrabbit:oak-api:1.40.0",
+        "org.apache.jackrabbit:oak-lucene:1.40.0",
+        "org.apache.jackrabbit:oak-search:1.40.0",
+        "org.apache.jackrabbit:oak-segment-tar:1.40.0",
+        "org.apache.jackrabbit:oak-commons:1.40.0",
+        "org.apache.jackrabbit:oak-blob:1.40.0",
+        "org.apache.jackrabbit:oak-blob-plugins:1.40.0",
+        "org.apache.jackrabbit:oak-query-spi:1.40.0",
+        "javax.jcr:jcr:2.0",
+        "io.dropwizard.metrics:metrics-core:4.1.18",
+
+        # metadata-store-cassandra: Datastax Java driver 4.x.
+        "com.datastax.oss:java-driver-core:4.14.0",
+        "com.datastax.oss:java-driver-query-builder:4.14.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+    fetch_sources = False,
+    fail_on_missing_checksum = True,
+)
+use_repo(maven, "maven")

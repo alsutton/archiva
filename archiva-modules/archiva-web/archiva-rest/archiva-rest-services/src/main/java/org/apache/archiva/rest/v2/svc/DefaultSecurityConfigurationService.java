@@ -517,7 +517,7 @@ public class DefaultSecurityConfigurationService implements SecurityConfiguratio
                 {
                     ldapConnection.close( );
                 }
-                catch ( NamingException e )
+                catch ( Exception e )
                 {
                     log.error( "Could not close connection: {}", e.getMessage( ) );
                 }
@@ -557,7 +557,7 @@ public class DefaultSecurityConfigurationService implements SecurityConfiguratio
                 {
                     ldapConnection.close( );
                 }
-                catch ( NamingException e )
+                catch ( Exception e )
                 {
                     log.error( "Could not close connection: {}", e.getMessage( ), e );
                 }

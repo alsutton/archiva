@@ -1,0 +1,8 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-scheduler-api",
+    deps = [
+        "//third_party/archiva-components/spring-taskqueue",
+    ],
+)

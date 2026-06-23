@@ -1,0 +1,89 @@
+load("//tools/bazel:archiva.bzl", "archiva_module")
+
+archiva_module(
+    name = "archiva-scheduler-repository",
+    # oak-jcr/metadata-store-jcr now wires up enough that the JCR bean
+    # registers, but Oak 1.40.0 bundles Lucene 4.7 (LUCENE_47 field) while
+    # archiva's classpath ends up with a newer Lucene. Maven solves this
+    # with a maven-shade-plugin pass on oak-jcr-lucene that renames Oak's
+    # Lucene to a private package; replicating that under Bazel needs a
+    # bytecode-rewriting rule (custom Starlark wrapping ASM or jarjar).
+    manual_tests = {
+        "src/test/java/org/apache/archiva/scheduler/repository/ArchivaRepositoryScanningTaskExecutorPhase1Test.java": ["manual"],
+        "src/test/java/org/apache/archiva/scheduler/repository/ArchivaRepositoryScanningTaskExecutorPhase2Test.java": ["manual"],
+    },
+    test_jvm_flags = [
+        # JcrRepositorySessionFactory reads appserver.base; needs to be a
+        # non-null writable path. /tmp is fine for a one-off test process
+        # (Bazel sandboxes each test in its own filesystem view).
+        "-Dappserver.base=/tmp",
+    ],
+    test_deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-consumers/archiva-consumer-api",
+        "//archiva-modules/archiva-base/archiva-proxy-api",
+        "//archiva-modules/archiva-maven/archiva-maven-common",
+        "@maven//:commons_io_commons_io",
+        "@maven//:org_apache_maven_wagon_wagon_http_shared",
+        "@maven//:org_apache_maven_wagon_wagon_provider_api",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-filelock",
+        "//archiva-modules/archiva-base/archiva-mock",
+        "//archiva-modules/archiva-base/archiva-repository-admin/archiva-repository-admin-api",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-base/archiva-repository-layer",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "//archiva-modules/archiva-base/archiva-storage-fs",
+        "//archiva-modules/archiva-base/archiva-test-utils",
+        "//archiva-modules/archiva-maven/archiva-maven-repository",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-repository-api",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//archiva-modules/metadata/metadata-statistics-api",
+        "//third_party/archiva-components/spring-taskqueue",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_maven_indexer_indexer_core_shaded_lucene",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+        "@maven//:org_springframework_spring_test",
+    ],
+    runtime_test_deps = [
+        "//archiva-modules/metadata/metadata-store-provider/oak-jcr/metadata-store-jcr",
+        "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
+        "@maven//:org_apache_logging_log4j_log4j_core",
+        "@maven//:org_apache_logging_log4j_log4j_jcl",
+        "@maven//:org_springframework_spring_beans",
+        "@maven//:commons_beanutils_commons_beanutils",
+        "//third_party/archiva-components/spring-registry-commons",
+        "//third_party/archiva-components/spring-cache-ehcache",
+        # Wagon impls referenced by archiva-maven-proxy's spring-context.xml.
+        "@maven//:org_apache_maven_wagon_wagon_http",
+        "@maven//:org_apache_maven_wagon_wagon_http_lightweight",
+        "@maven//:org_apache_maven_wagon_wagon_http_shared",
+        "@maven//:org_apache_httpcomponents_httpcore",
+    ],
+    deps = [
+        "//archiva-modules/archiva-base/archiva-common",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
+        "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        "//archiva-modules/archiva-base/archiva-consumers/archiva-consumer-api",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-base/archiva-repository-scanner",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-api",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-repository-api",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//archiva-modules/metadata/metadata-statistics-api",
+        "//third_party/archiva-components/spring-quartz",
+        "//third_party/archiva-components/spring-taskqueue",
+        "@maven//:jakarta_annotation_jakarta_annotation_api",
+        "@maven//:javax_inject_javax_inject",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_quartz_scheduler_quartz",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_spring_context",
+    ],
+)

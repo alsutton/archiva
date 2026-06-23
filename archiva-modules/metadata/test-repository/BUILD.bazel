@@ -1,0 +1,19 @@
+load("@rules_java//java:defs.bzl", "java_library")
+
+# Pure test-fixture module: no Java code, just a tree of .pom/.jar/
+# .md5/.sha1 files under src/main/resources that downstream tests pull
+# onto their classpath. We expose it as a resources-only java_library
+# so dependent tests get the files via getResource() on the classpath
+# (matching Maven's target/classes layout for jar deps).
+java_library(
+    name = "test-repository",
+    resource_strip_prefix = "archiva-modules/metadata/test-repository/src/main/resources",
+    resources = glob(["src/main/resources/**"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "raw-resources",
+    srcs = glob(["src/main/resources/**"]),
+    visibility = ["//:__pkg__"],
+)

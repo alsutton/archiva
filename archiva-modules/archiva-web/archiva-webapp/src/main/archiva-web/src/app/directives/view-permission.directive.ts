@@ -23,6 +23,7 @@ import {Directive, ElementRef, Input, OnChanges, OnInit, Renderer2, SimpleChange
  * element, if the permission returns 'false'.
  */
 @Directive({
+  standalone: false,
     selector: '[appViewPermission]'
 })
 export class ViewPermissionDirective implements OnInit, OnChanges {

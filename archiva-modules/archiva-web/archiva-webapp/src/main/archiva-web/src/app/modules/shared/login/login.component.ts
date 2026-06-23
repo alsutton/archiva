@@ -24,6 +24,7 @@ import {Router} from "@angular/router";
 import {ArchivaRequestService} from "../../../services/archiva-request.service";
 
 @Component({
+  standalone: false,
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']

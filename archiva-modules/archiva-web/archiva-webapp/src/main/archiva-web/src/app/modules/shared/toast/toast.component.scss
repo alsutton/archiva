@@ -15,10 +15,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-@import '~bootstrap/scss/functions';
-@import '~bootstrap/scss/variables';
-@import '~bootstrap/scss/mixins';
-@import '~bootstrap/scss/alert';
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import 'bootstrap/scss/alert';
 
 app-toasts {
   margin:.5em;
@@ -44,17 +44,19 @@ ngb-toast.alert {
 
 @each $color, $value in $theme-colors {
   ngb-toast.alert-#{$color} {
-    @include alert-variant(theme-color-level($color, $alert-bg-level), theme-color-level($color, $alert-border-level), theme-color-level($color, $alert-color-level));
-      .toast-header {
-        display: flex;
-        align-items: center;
-        padding: $toast-padding-y $toast-padding-x;
-        color: theme-color-level($color, $alert-color-level) !important;
-        background-color: theme-color-level($color, $alert-bg-level) !important;
-        background-clip: padding-box;
-        border-bottom: $toast-border-width solid $toast-header-border-color;
-        @include border-top-radius(subtract($toast-border-radius, $toast-border-width));
-      }
+    color: var(--bs-#{$color}-text-emphasis);
+    background-color: var(--bs-#{$color}-bg-subtle);
+    border-color: var(--bs-#{$color}-border-subtle);
+    .toast-header {
+      display: flex;
+      align-items: center;
+      padding: $toast-padding-y $toast-padding-x;
+      color: var(--bs-#{$color}-text-emphasis) !important;
+      background-color: var(--bs-#{$color}-bg-subtle) !important;
+      background-clip: padding-box;
+      border-bottom: $toast-border-width solid $toast-header-border-color;
+      border-top-left-radius: subtract($toast-border-radius, $toast-border-width);
+      border-top-right-radius: subtract($toast-border-radius, $toast-border-width);
+    }
   }
-
 }

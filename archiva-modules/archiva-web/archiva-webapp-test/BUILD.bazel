@@ -1,0 +1,6 @@
+# Maven pom-only module that ran JS / Selenium integration tests via
+# selenium-maven-plugin and exec-maven-plugin during the Maven build. The
+# JS test runner toolchain is its own ecosystem (npm/webdriver/jasmine)
+# and doesn't translate to Bazel without a separate rules_nodejs setup.
+# Nothing to build here under Bazel; integration testing is a downstream
+# workflow concern.
