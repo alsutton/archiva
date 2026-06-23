@@ -81,85 +81,78 @@
     </div>
 </form>
 <hr/>
-<ngb-accordion activeIds="">
-    <ngb-panel id="parents">
-        <ng-template ngbPanelHeader let-opened="opened">
-            <div class="d-flex align-items-center justify-content-between">
-                <button ngbPanelToggle class="btn btn-link text-left shadow-none">
-                    <h4>{{'roles.edit.parents'|translate}}</h4></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="opened"><i class="fa fa-eye-slash"></i></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="!opened"><i class="fa fa-eye"></i></button>
+<div ngbAccordion>
+    <div ngbAccordionItem="parents">
+        <h2 ngbAccordionHeader>
+            <button ngbAccordionButton type="button"><h4 class="m-0">{{'roles.edit.parents'|translate}}</h4></button>
+        </h2>
+        <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+                <ng-template>
+                    <ng-container *ngIf="editRole?.parents.length>0">
+                        <ul class="list-group" *ngFor="let parentRole of editRole?.parents">
+                            <li class="list-group-item"><a routerLink="../{{parentRole?.id}}">{{parentRole?.name}}</a></li>
+                        </ul>
+                    </ng-container>
+                </ng-template>
             </div>
-        </ng-template>
-        <ng-template ngbPanelContent>
-            <ng-container *ngIf="editRole?.parents.length>0">
-                <ul class="list-group" *ngFor="let parentRole of editRole?.parents">
-                    <li class="list-group-item"><a routerLink="../{{parentRole?.id}}">{{parentRole?.name}}</a></li>
-                </ul>
-            </ng-container>
-        </ng-template>
-    </ngb-panel>
-    <ngb-panel id="children">
-        <ng-template ngbPanelHeader let-opened="opened">
-            <div class="d-flex align-items-center justify-content-between">
-                <button ngbPanelToggle class="btn btn-link text-left shadow-none">
-                    <h4>{{'roles.edit.children'|translate}}</h4></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="opened"><i class="fa fa-eye-slash"></i></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="!opened"><i class="fa fa-eye"></i></button>
+        </div>
+    </div>
+    <div ngbAccordionItem="children">
+        <h2 ngbAccordionHeader>
+            <button ngbAccordionButton type="button"><h4 class="m-0">{{'roles.edit.children'|translate}}</h4></button>
+        </h2>
+        <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+                <ng-template>
+                    <ng-container *ngIf="editRole?.children.length>0">
+                        <ul class="list-group" *ngFor="let childRole of editRole?.children">
+                            <li class="list-group-item"><a routerLink="../{{childRole?.id}}">{{childRole?.name}}</a></li>
+                        </ul>
+                    </ng-container>
+                </ng-template>
             </div>
-        </ng-template>
-        <ng-template ngbPanelContent>
-            <ng-container *ngIf="editRole?.children.length>0">
-                <ul class="list-group" *ngFor="let childRole of editRole?.children">
-                    <li class="list-group-item"><a routerLink="../{{childRole?.id}}">{{childRole?.name}}</a></li>
-                </ul>
-            </ng-container>
-        </ng-template>
-    </ngb-panel>
+        </div>
+    </div>
 
-    <ngb-panel id="permissions">
-        <ng-template ngbPanelHeader let-opened="opened">
-            <div class="d-flex align-items-center justify-content-between">
+    <div ngbAccordionItem="permissions">
+        <h2 ngbAccordionHeader>
+            <button ngbAccordionButton type="button"><h4 class="m-0">{{'roles.edit.permissions'|translate}}</h4></button>
+        </h2>
+        <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+                <ng-template>
+                    <ng-container *ngIf="editRole">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{{'permissions.attributes.permission'|translate}}</th>
+                                <th>{{'permissions.attributes.operation'|translate}}</th>
+                                <th>{{'permissions.attributes.resource'|translate}}</th>
+                            </tr>
+                            </thead>
+                            <tbody *ngFor="let perm of editRole.permissions">
+                            <tr>
+                                <td>{{perm.name}}</td>
+                                <td>{{perm.operation.name}}</td>
+                                <td>{{perm.resource.identifier}}</td>
+                            </tr>
+                            </tbody>
 
-                <button ngbPanelToggle class="btn btn-link text-left shadow-none">
-                    <h4>{{'roles.edit.permissions'|translate}}</h4></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="opened"><i class="fa fa-eye-slash"></i></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="!opened"><i class="fa fa-eye"></i></button>
+                        </table>
+                    </ng-container>
+                </ng-template>
             </div>
-        </ng-template>
-        <ng-template ngbPanelContent>
-            <ng-container *ngIf="editRole">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>{{'permissions.attributes.permission'|translate}}</th>
-                        <th>{{'permissions.attributes.operation'|translate}}</th>
-                        <th>{{'permissions.attributes.resource'|translate}}</th>
-                    </tr>
-                    </thead>
-                    <tbody *ngFor="let perm of editRole.permissions">
-                    <tr>
-                        <td>{{perm.name}}</td>
-                        <td>{{perm.operation.name}}</td>
-                        <td>{{perm.resource.identifier}}</td>
-                    </tr>
-                    </tbody>
+        </div>
+    </div>
 
-                </table>
-            </ng-container>
-        </ng-template>
-    </ngb-panel>
-
-    <ngb-panel>
-        <ng-template ngbPanelHeader let-opened="opened">
-            <div class="d-flex align-items-center justify-content-between">
-                <button ngbPanelToggle class="btn btn-link text-left shadow-none">
-                    <h4>{{'roles.edit.users'|translate}}</h4></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="opened"><i class="fa fa-eye-slash"></i></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="!opened"><i class="fa fa-eye"></i></button>
-            </div>
-        </ng-template>
-        <ng-template ngbPanelContent>
+    <div ngbAccordionItem="users">
+        <h2 ngbAccordionHeader>
+            <button ngbAccordionButton type="button"><h4 class="m-0">{{'roles.edit.users'|translate}}</h4></button>
+        </h2>
+        <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+                <ng-template>
             <h4>{{'roles.edit.usersParents'|translate}}</h4>
             <app-paginated-entities [service]="roleUserParentService" pageSize="5" [(sortField)]="userParentSortField"
                                     [(sortOrder)]="userParentSortOrder" [displayControlsIfSinglePage]="false"
@@ -259,44 +252,45 @@
                 <button class="btn btn-primary" (click)="assignUserRole()">{{'roles.edit.assignButton'|translate}}</button>
             </form>
 
-        </ng-template>
-    </ngb-panel>
-
-    <ngb-panel id="groupMapping">
-        <ng-template ngbPanelHeader let-opened="opened">
-            <div class="d-flex align-items-center justify-content-between">
-                <button ngbPanelToggle class="btn btn-link text-left shadow-none">
-                    <h4>{{'roles.edit.groupMapping'|translate}}</h4></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="opened"><i class="fa fa-eye-slash"></i></button>
-                <button class="btn btn-link shadow-none" ngbPanelToggle *ngIf="!opened"><i class="fa fa-eye"></i></button>
-            </div>
-        </ng-template>
-        <ng-template ngbPanelContent>
-            <ul class="list-group" >
-                <li class="list-group-item" *ngFor="let group of roleMappings$ |async">{{group}}</li>
-            </ul>
-            <form class="mt-2">
-                <ng-template #groupResultTemplate let-r="result" let-t="term">
-                    <ngb-highlight [result]="r.name" [term]="t"></ngb-highlight>
                 </ng-template>
+            </div>
+        </div>
+    </div>
 
-                <div class="form-group">
-                    <label for="groupSearchField">{{'roles.edit.assignGroupSearch'|translate}}</label>
-                    <input id="groupSearchField" type="text" class="form-control col-md-2"
-                           name="groupSearchField"
-                           [class.is-invalid]="groupSearchFailed" [resultTemplate]="groupResultTemplate"
-                           [inputFormatter]="getGroupName"
-                           [placement]="'top'"
-                           [(ngModel)]="groupSearchModel" [ngbTypeahead]="searchGroup" placeholder="Group Search"/>
-                    <small *ngIf="groupSearching"
-                           class="form-text text-muted">{{'form.searching'  |translate}}</small>
-                    <div class="invalid-feedback"
-                         *ngIf="groupSearchFailed">{{'roles.edit.groupSearchFailed'|translate}}</div>
-                </div>
-                <button class="btn btn-primary" id="addGroupButton" (click)="assignGroupRole()">{{'roles.edit.assignButton'|translate}}</button>
-            </form>
-        </ng-template>
-    </ngb-panel>
+    <div ngbAccordionItem="groupMapping">
+        <h2 ngbAccordionHeader>
+            <button ngbAccordionButton type="button"><h4 class="m-0">{{'roles.edit.groupMapping'|translate}}</h4></button>
+        </h2>
+        <div ngbAccordionCollapse>
+            <div ngbAccordionBody>
+                <ng-template>
+                    <ul class="list-group" >
+                        <li class="list-group-item" *ngFor="let group of roleMappings$ |async">{{group}}</li>
+                    </ul>
+                    <form class="mt-2">
+                        <ng-template #groupResultTemplate let-r="result" let-t="term">
+                            <ngb-highlight [result]="r.name" [term]="t"></ngb-highlight>
+                        </ng-template>
+
+                        <div class="form-group">
+                            <label for="groupSearchField">{{'roles.edit.assignGroupSearch'|translate}}</label>
+                            <input id="groupSearchField" type="text" class="form-control col-md-2"
+                                   name="groupSearchField"
+                                   [class.is-invalid]="groupSearchFailed" [resultTemplate]="groupResultTemplate"
+                                   [inputFormatter]="getGroupName"
+                                   [placement]="'top'"
+                                   [(ngModel)]="groupSearchModel" [ngbTypeahead]="searchGroup" placeholder="Group Search"/>
+                            <small *ngIf="groupSearching"
+                                   class="form-text text-muted">{{'form.searching'  |translate}}</small>
+                            <div class="invalid-feedback"
+                                 *ngIf="groupSearchFailed">{{'roles.edit.groupSearchFailed'|translate}}</div>
+                        </div>
+                        <button class="btn btn-primary" id="addGroupButton" (click)="assignGroupRole()">{{'roles.edit.assignButton'|translate}}</button>
+                    </form>
+                </ng-template>
+            </div>
+        </div>
+    </div>
 
 
-</ngb-accordion>
+</div>

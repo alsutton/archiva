@@ -1,0 +1,45 @@
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load(
+    "@npm//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:@angular/cli/package_json.bzl",
+    angular_cli_bin = "bin",
+)
+
+# Exposed for npm.npm_translate_lock in //:MODULE.bazel.
+exports_files(
+    [
+        "package.json",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Materialises the resolved npm packages from @npm into a :node_modules
+# target that downstream js_* rules can depend on.
+npm_link_all_packages(name = "node_modules")
+
+# `bazel run //archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:serve`
+# launches the Angular dev server (`ng serve`) against the live source tree.
+# chdir = package_name() ensures ng resolves angular.json from this directory.
+# NG_CLI_ANALYTICS=false suppresses the first-run opt-in prompt; otherwise ng
+# tries to persist the answer to angular.json, which is a read-only symlink in
+# the runfiles tree and yields EACCES.
+angular_cli_bin.ng_binary(
+    name = "serve",
+    args = ["serve"],
+    chdir = package_name(),
+    env = {"NG_CLI_ANALYTICS": "false"},
+    data = [
+        ":node_modules",
+        "angular.json",
+        "tsconfig.app.json",
+        "tsconfig.json",
+        "tsconfig.spec.json",
+        "tslint.json",
+        "//archiva-docs:archiva-docs-js",
+    ] + glob([
+        "src/**/*",
+        "e2e/**/*",
+    ]),
+    visibility = ["//archiva-modules/archiva-web/archiva-webapp:__pkg__"],
+)

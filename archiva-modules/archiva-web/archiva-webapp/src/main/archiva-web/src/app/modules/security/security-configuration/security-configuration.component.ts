@@ -19,6 +19,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
+  standalone: false,
   selector: 'app-security-configuration',
   templateUrl: './security-configuration.component.html',
   styleUrls: ['./security-configuration.component.scss']

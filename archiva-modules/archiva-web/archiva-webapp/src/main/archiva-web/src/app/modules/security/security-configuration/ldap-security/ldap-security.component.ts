@@ -30,6 +30,7 @@ import {HttpResponse} from "@angular/common/http";
 import {PropertyMap} from "@app/model/property-map";
 
 @Component({
+  standalone: false,
     selector: 'app-ldap-security',
     templateUrl: './ldap-security.component.html',
     styleUrls: ['./ldap-security.component.scss']

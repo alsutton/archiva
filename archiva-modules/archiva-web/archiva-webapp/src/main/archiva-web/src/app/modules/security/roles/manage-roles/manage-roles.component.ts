@@ -22,6 +22,7 @@ import {map, tap} from "rxjs/operators";
 import {ActivatedRoute} from "@angular/router";
 
 @Component({
+  standalone: false,
   selector: 'app-manage-roles',
   templateUrl: './manage-roles.component.html',
   styleUrls: ['./manage-roles.component.scss']

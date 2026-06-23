@@ -27,3 +27,4 @@ nb-configuration.xml
 # bazel
 /bazel-*
 /MODULE.bazel.lock
+/.aspect/

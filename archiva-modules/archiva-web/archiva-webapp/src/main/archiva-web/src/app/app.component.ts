@@ -27,6 +27,7 @@ import {NgbModal} from "@ng-bootstrap/ng-bootstrap";
 import {ErrorMessage} from "./model/error-message";
 
 @Component({
+  standalone: false,
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
@@ -36,7 +37,7 @@ export class AppComponent implements OnInit, OnDestroy {
   version = 'Angular version 10.0.2';
 
   @ViewChild('alertcontainer') errorAlert;
-  private alertUnsubscribe = new Subject();
+  private alertUnsubscribe = new Subject<void>();
   private errorOpen=false;
   errorMessages: Array<ErrorMessage> = new Array<ErrorMessage>();
 

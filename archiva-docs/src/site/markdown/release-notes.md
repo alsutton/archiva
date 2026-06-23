@@ -1,0 +1,251 @@
+# Release Notes for Archiva ${project.version}
+
+The Apache Archiva team is pleased to announce the release of Archiva
+${project.version}.  Archiva is [available for download from the web site](http://archiva.apache.org/download.html).
+
+Archiva is an application for managing one or more remote repositories,
+including administration, artifact handling, browsing and searching.
+
+If you have any questions, please consult:
+
+- the web site: <http://archiva.apache.org/>
+
+- the archiva-user mailing list: <http://archiva.apache.org/mailing-lists.html>
+
+## New in Archiva ${project.version}
+
+Apache Archiva ${project.version} is a bug fix release:
+
+### Compatibility Changes
+
+- There are no compatibility changes
+
+### New Feature
+
+- There are no new features in this release.
+
+### Improvements
+
+- There are no improvements
+
+### Bug/Security Fix
+
+- Potential NPE when using the upload file service
+
+## Previous Release Notes
+
+## Release Notes for Archiva 2.2.9
+
+Apache Archiva 2.2.9 is a security fix release:
+
+Released: 2022-10-09
+
+### Bug/Security Fix
+
+- [MRM-2051}: upgrade dom4j (v2 branch)
+- upgrade spring 4.2.9
+- [MRM-2050]: upgrade commons-fileupload and commons-io due to cves
+- [MRM-2049]: upgrade httpclient due to cves
+- [MRM-2048]- upgrade xerces due to CVE
+
+## Release Notes for Archiva 2.2.8
+
+Apache Archiva 2.2.8 is a security fix release:
+
+Released: 2022-05-25
+
+## 88 Bug/Security Fix
+
+- CVE-2022-29405 Apache Archiva Arbitrary user password reset vulnerability
+
+## Release Notes for Archiva 2.2.7
+
+Apache Archiva 2.2.7 is a security fix release:
+
+Released: 2022-12-22
+
+### Compatibility Changes
+
+- [MRM-2021] There is a new flag 'literalVersion=true/false' for service archivaServices/searchService/artifact
+which allows to change the behaviour for v=LATEST search.
+
+### New Feature
+
+- There are no new features in this release.
+
+### Improvements
+
+- There are no improvements
+
+### Bug/Security Fix
+
+- [MRM-2027] Update of the log4j2 version to 2.17.0
+
+- [MRM-2020] Fixed the behaviour of the startup script, if ARCHIVA_BASE is set (separating installation and data directory)
+
+- [MRM-2022] Fixed the handling of X-XSRF-TOKEN header in Javascript calls
+
+## Release Notes for Archiva 2.2.6
+
+Apache Archiva 2.2.6 is a security fix release:
+
+Released: 2021-12-15
+
+### Compatibility Changes
+
+- No API changes or known side effects.
+
+### New Feature
+
+- There are no new features in this release.
+
+### Improvements
+
+- There are no improvements
+
+### Bug/Security Fix
+
+- Update of the log4j2 version to mitigate the log4j2 vulnerability (CVE-2021-44228)
+
+- Deactivated directory listings by the file servlet
+
+## Release Notes for Archiva 2.2.5
+
+Apache Archiva 2.2.5 is a bug fix release:
+
+Released: 2020-06-19
+
+### Compatibility Changes
+
+- No API changes or known side effects.
+
+### New Feature
+
+- There are no new features in this release.
+
+### Improvements
+
+- There are no improvements
+
+### Bug Fix
+
+- [MRM-2008] Fix for group names with slashes
+
+- Better handling of LDAP filter
+
+## Release Notes for Archiva 2.2.4
+
+Apache Archiva 2.2.4 is a bug fix release:
+
+- Fixes for handling of artifacts
+
+- Improved validation of REST calls
+
+### Compatibility Changes
+
+No API changes or known side effects.
+
+Released: 2019-04-30
+
+### New Feature
+
+- There are no new features in this release.
+
+### Improvements
+
+- Adding additional validation to REST service calls for artifact upload
+
+### Bug Fix
+
+- [MRM-1972] Stored XSS in Web UI Organization Name
+
+- [MRM-1966] Repository-purge not working
+
+- [MRM-1958] Purge by retention count deletes files but leaves history on website.
+
+- [MRM-1929] Repository purge is not reflected in index
+
+## Release Notes for Archiva 2.2.3
+
+### New in Archiva 2.2.3
+
+Apache Archiva 2.2.3 is a bug fix release:
+
+## >>>>>>> Stashed changes
+
+- Some fixes for the REST API were added to detect requests from unknown origin
+
+- Some bugfixes were added
+
+## Compatibility Changes
+
+- The REST services are now checking for the origin of the requests by analysing Origin
+and Referer header of the HTTP requests and adding an validation token to the Header.
+This prevents requests from malicious sites if they are open in the same browser. If you use
+the REST services from other clients you may change the behaviour with the new
+configuration properties for the redback security (`rest.csrffilter.*`, `rest.baseUrl`).
+For more information see [Archiva Security Configuration](./adminguide/customising-security.html) and
+the [Redback REST documentation](/redback/integration/rest.html).
+
+**Note:** If your archiva installation is behind a reverse proxy or load balancer, it may be possible
+that the Archiva Web UI does not load after the upgrade. If this is the case you may access the WebUI
+via localhost or edit archiva.xml manually. In the "Redback Runtime Configuration" properties you have to
+enter the base URLs of your archiva installation to the `rest.baseUrl` field.
+
+- Archiva uses redback for authentication and authorization in version 2.6
+
+## Release Notes
+
+The Archiva ${project.version} features set can be seen in the [feature tour](./tour/index.html).
+
+## Changes in Archiva ${project.version}
+
+Released: **${releaseDate}**
+
+### New Feature
+
+### Improvement
+
+- [MRM-1925] - Make User-Agent header configurable for HTTP requests
+
+- [MRM-1861], [MRM-1924] - Increasing timeouts for repository check
+
+- [MRM-1937] - Prevent creating initial admin user with wrong name.
+
+- Adding origin header validation checks for REST requests
+
+### Bugs fixed
+
+- [MRM-1859] - Error upon viewing 'Artifacts' tab when browsing an artifact
+
+- [MRM-1874] - Login Dialog triggers multiple events (+messages)
+
+- [MRM-1908] - Logged on users can write any repository
+
+- [MRM-1909] - Remote repository check fails for https://repo.maven.apache.org/maven2
+
+- [MRM-1923] - Fixing bind issue with certain ldap servers, when user not found
+
+- [MRM-1926] - Invalid checksum files in Archiva repository after download from remote repository
+
+- [MRM-1928] - Bad redirect URL when using Archiva through HTTP reverse proxy
+
+- [MRM-1933] - No message body writer has been found for class org.apache.archiva.rest.services.ArchivaRestError
+
+- [MRM-1940] - Slashes appended to remote repo url
+
+### Task
+
+## History
+
+Archiva was started in November 2005, building a simple framework on top of some existing repository conversion
+tools within the Maven project. Initial development focused on repository conversion, error reporting, and indexing.
+From January 2006 a web application was started to visualise the information and to start incorporating
+functionality from the unmaintained maven-proxy project.
+
+Development continued through many stops and starts. Initial versions of Archiva were built from source by contributors,
+and the first alpha version was not released until April 2007. Some significant changes were made to improve
+performance and functionality in June 2007 and over the next 6 months and a series of alpha and beta releases, a concerted effort
+was made to release the 1.0 version.
+
+Archiva became an Apache "top level project" in March 2008.

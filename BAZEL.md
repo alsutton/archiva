@@ -1,8 +1,10 @@
 # Building Archiva with Bazel
 
-This repo has both a Maven build (`pom.xml`) and a Bazel build
-(`MODULE.bazel` + `BUILD.bazel` files). Maven is still authoritative
-for releases; Bazel runs in parallel for faster iterative builds.
+Archiva builds with Bazel (`MODULE.bazel` + `BUILD.bazel` files). The legacy
+Maven `pom.xml` files are retained for reference and for the site-publishing
+workflow (`archiva-docs/`, `archiva-modules/` — see those READMEs), but Bazel
+is the authoritative build for compiling, testing, and packaging the
+application.
 
 ## Quick start
 

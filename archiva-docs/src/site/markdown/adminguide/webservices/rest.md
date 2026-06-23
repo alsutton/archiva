@@ -1,0 +1,99 @@
+# Using REST Services
+
+Starting version 1.4, you can use some REST Services to manage your Apache Archiva instance and Search artifacts.
+All samples here will use Apache CXF REST client API. By the way you can use some others REST client frameworks.
+NOTE: a wadl is available in your Archiva instance : http(s)://ip:port/../restServices/application.wadl
+
+- Archiva REST api is available here: <http://archiva.apache.org/docs/0/rest-docs-archiva-rest-api/index.html>
+
+- Archiva UI REST api is available here: <http://archiva.apache.org/docs/0/rest-docs-archiva-ui/index.html>
+
+- Redback REST api is available here: <http://archiva.apache.org/docs/0/rest-docs-redback-rest-api/index.html>
+
+## Security related information
+
+Starting with version 2.2.2 we added HTTP verification techniques to avoid cross site request forgery attacks. The
+updating services check Origin and Referer header and use a token provided by the login service.
+If you use the webservices with a native client that is no browser or want to allow requests from different origin
+URLs you have to change the configuration. For further information see the [Redback REST documentation](/redback/integration/rest.html)
+
+## Search Service
+
+Authentication headers for connect to your Archiva instance :
+
+## %{snippet|id=authz-header|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/AbstractArchivaRestTest.java}
+
+Get a Search Service Client :
+
+## %{snippet|id=cxf-searchservice-creation|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/AbstractArchivaRestTest.java}
+
+Quick Search
+
+## %{snippet|id=quick-search|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/SearchServiceTest.java}
+
+Search Artifacts Version : to search all availables version with a groupId and artifactId and packaging (if empty jar is used)
+
+## %{snippet|id=searchservice-artifact-versions|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/SearchServiceTest.java}
+
+Search Service with a classifier :
+
+## %{snippet|id=searchservice-with-classifier|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/SearchServiceTest.java}
+
+Search Service with a classifier :
+
+## %{snippet|id=searchservice-with-classifier|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/SearchServiceTest.java}
+
+Copy Artifact from a repository to an other one :
+
+For some reasons you want to use a test repository before moving your artifacts to a repository used by final users.
+To achieve this, you can use a service which can copy an artifact from a repository to an other one
+
+## %{snippet|id=copy-artifact|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/CopyArtifactTest.java}
+
+To know all the possible options, you can refer to the javadoc of SearchRequest class.
+
+## Browse Service
+
+Get a Browse Service Client :
+
+## %{snippet|id=cxf-browseservice-creation|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/AbstractArchivaRestTest.java}
+
+Get artifacts based on project version metadata, generic metadata added previously in Archiva :
+
+## %{snippet|id=get-artifacts-by-project-version-metadata|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/BrowseServiceTest.java}
+
+Get artifacts based on the artifact properties :
+
+## %{snippet|id=get-artifacts-by-metadata|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/BrowseServiceTest.java}
+
+Get artifacts based on the project properties from POM :
+
+## %{snippet|id=get-artifacts-by-property|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/BrowseServiceTest.java}
+
+Searching by properties and metadata :
+
+## %{snippet|id=search-artifacts-by-field|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/BrowseServiceTest.java}
+
+## %{snippet|id=search-artifacts|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/BrowseServiceTest.java}
+
+Get  Search
+
+## %{snippet|id=quick-search|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/archiva-modules/archiva-web/archiva-rest/archiva-rest-services/src/test/java/org/apache/archiva/rest/services/SearchServiceTest.java}
+
+Dependencies to add in order to use those REST Services
+
+## %{snippet|id=rest-dependencies|ignoreDownloadError=true|url=https://raw.githubusercontent.com/apache/archiva/master/pom.xml}
+
+Current versions use in Apache Archiva:
+
+- `${project.version}`: ${project.version}
+
+- `${cxfVersion}`: ${cxf.version}
+
+- `${jacksonVersion}`: ${jacksonVersion}
+
+## Security Framework Services:
+
+You can use Redback Rest Services to control user creation/modification and add/remove roles.
+
+See <http://archiva.apache.org/redback/integration/rest.html>

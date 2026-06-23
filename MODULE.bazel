@@ -9,9 +9,34 @@ module(
     version = "3.0.0-SNAPSHOT",
 )
 
-bazel_dep(name = "rules_java", version = "8.6.1")
-bazel_dep(name = "rules_jvm_external", version = "6.5")
-bazel_dep(name = "rules_pkg", version = "1.0.1")
+bazel_dep(name = "rules_java", version = "9.6.1")
+bazel_dep(name = "rules_jvm_external", version = "7.0")
+bazel_dep(name = "rules_pkg", version = "1.2.0")
+bazel_dep(name = "rules_shell", version = "0.8.0")
+bazel_dep(name = "aspect_rules_js", version = "3.2.2")
+bazel_dep(name = "rules_nodejs", version = "6.7.4")
+
+# Node.js toolchain for the archiva-web Angular frontend. Angular 21 (declared
+# under archiva-modules/.../archiva-web/package.json devDependencies) requires
+# Node 20+.
+node = use_extension("@rules_nodejs//nodejs:extensions.bzl", "node")
+node.toolchain(node_version = "24.13.0")
+
+# Translate the existing npm package-lock.json into a pnpm-style lock that
+# aspect_rules_js consumes. update_pnpm_lock=True lets Bazel regenerate
+# pnpm-lock.yaml from package-lock.json on demand, so the npm lockfile stays
+# the source of truth for the JS side.
+npm = use_extension("@aspect_rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:pnpm-lock.yaml",
+    update_pnpm_lock = True,
+    verify_node_modules_ignored = "//:.bazelignore",
+    data = [
+        "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:package.json",
+    ],
+)
+use_repo(npm, "npm")
 
 maven = use_extension("@rules_jvm_external//:extensions.bzl", "maven")
 maven.install(

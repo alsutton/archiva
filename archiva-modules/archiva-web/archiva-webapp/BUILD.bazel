@@ -50,3 +50,11 @@ java_war(
     webapp_files = glob(["src/main/webapp/**"]),
     webapp_root = "src/main/webapp",
 )
+
+# Angular dev server for the archiva-web frontend, wired natively
+# via aspect_rules_js. The real target lives next to package.json;
+# this alias keeps `bazel run :serve` here as a stable entry point.
+alias(
+    name = "serve",
+    actual = "//archiva-modules/archiva-web/archiva-webapp/src/main/archiva-web:serve",
+)

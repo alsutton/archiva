@@ -19,6 +19,7 @@ import { Component, OnInit } from '@angular/core';
 import {UserService} from "../../../services/user.service";
 
 @Component({
+  standalone: false,
   selector: 'app-sidemenu',
   templateUrl: './sidemenu.component.html',
   styleUrls: ['./sidemenu.component.scss']

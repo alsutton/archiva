@@ -18,7 +18,6 @@
 
 import { Injectable, TemplateRef } from '@angular/core';
 import {AppNotification} from "@app/model/app-notification";
-import {not} from "rxjs/internal-compatibility";
 import {TranslateService} from "@ngx-translate/core";
 
 @Injectable({

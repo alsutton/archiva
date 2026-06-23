@@ -23,6 +23,7 @@ import {ToastService} from "@app/services/toast.service";
 import {ErrorResult} from "@app/model/error-result";
 
 @Component({
+  standalone: false,
   selector: 'app-user-info',
   templateUrl: './user-info.component.html',
   styleUrls: ['./user-info.component.scss']
