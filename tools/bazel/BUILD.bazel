@@ -1,6 +1,9 @@
 load("@rules_java//java:defs.bzl", "java_library")
 
-exports_files(["archiva.bzl"])
+exports_files([
+    "archiva.bzl",
+    "md_to_html.py",
+])
 
 java_library(
     name = "archiva-test-classloader",
