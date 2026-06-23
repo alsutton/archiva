@@ -24,7 +24,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Bazel keeps build outputs under ~/.cache/bazel and bazelisk caches
       # downloaded Bazel binaries under ~/.cache/bazelisk. Keying on the
