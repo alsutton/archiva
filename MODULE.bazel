@@ -14,7 +14,7 @@ bazel_dep(name = "rules_jvm_external", version = "7.0")
 bazel_dep(name = "rules_pkg", version = "1.2.0")
 bazel_dep(name = "rules_shell", version = "0.8.0")
 bazel_dep(name = "aspect_rules_js", version = "3.2.2")
-bazel_dep(name = "rules_nodejs", version = "6.7.4")
+bazel_dep(name = "rules_nodejs", version = "6.7.5")
 
 # Node.js toolchain for the archiva-web Angular frontend. Angular 21 (declared
 # under archiva-modules/.../archiva-web/package.json devDependencies) requires
