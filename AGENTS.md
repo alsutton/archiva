@@ -65,7 +65,7 @@ Apache License Version 2.0. Distribute includes third-party libraries under CDDL
 - `archiva-rss` — RSS feeds
 - `archiva-security` — Web security
 - `archiva-test-mocks` — Test mocks for web layer
-- Plus: `archiva-webapp-test`, `archiva-webapp`
+- Plus: `archiva-webapp-test`
 
 ## Build Tools (tools/bazel/)
 - `tools/bazel/archiva.bzl` — `archiva_module()` macro used by all archiva modules
