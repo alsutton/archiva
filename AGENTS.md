@@ -96,3 +96,44 @@ Three recurring patterns account for most manual tests:
 ## CI and Source Updates
 - Bazel CI caches `~/.cache/bazel` and `~/.cache/bazelisk` keyed on `MODULE.bazel`, `.bazelversion`, and Starlark in `tools/bazel`.
 - For test-repository fixture updates, regenerate `archiva-modules/metadata/test-repository/files.bzl` with the find/sed one-liner in BAZEL.md.
+
+---
+## Development Tips for Future Contributors
+### Commonly Used Scripts
+- `jetty.sh` / `jetty-debug.sh` – launch the Jetty distribution locally.
+- `checkoutSite.sh` / `deploySite.sh` – build and publish the documentation site.
+- `bazel` commands are the primary way to build and test. Use `bazelisk` (the wrapper) to automatically download the correct Bazel version.
+
+### Frequently Useful Bazel Commands
+- **Build only archiva-cli**: `bazel build //archiva-cli:archiva-cli`
+- **Run all unit tests**: `bazel test //...`
+- **Test a single package**: `bazel test //archiva-modules/archiva-base/archiva-common:...`
+- **Clean the build cache**: `bazel clean --expunge`
+- **Inspect a target**: `bazel query 'kind(java_library, //archiva-modules/... )'`
+
+### Helpful Goose Extensions
+- **developer** – use `shell` to run Bazel commands, `write`/`edit` to modify source, `tree` to explore repository.
+- **analyze** – run `analyze` on a module directory to get a quick overview of file counts, functions, and call graphs, e.g., `analyze({"path":"archiva-modules/archiva-base/archiva-common"})`.
+- **extensionmanager** – enable additional extensions if needed, such as `web-search` for external research.
+
+### Typical Development Workflow
+1. **Sync** – ensure you have the latest code and submodules.
+2. **Run CI locally** – `bazel test //...` to verify everything passes.
+3. **Make changes** – use `tree` to locate the module, `shell` with `rg` to search, then `edit`/`write` to apply changes.
+4. **Iterate** – re-run affected tests with `bazel test //path/to/changed/module:...`.
+5. **Build artifact** – if needed, build the WAR (`bazel build //archiva-modules/archiva-web/archiva-webapp:archiva`) or Jetty dist (`bazel build //archiva-jetty:archiva-jetty-dist`).
+
+### Known Gotchas
+- **JUnit version mixing** – some tests require JUnit Jupiter but are run with the JUnit 4 runner; avoid editing those test classes unless you also update the runner configuration.
+- **Hard‑coded Maven target directories** – Bazel sandbox does not create `target/` folders automatically. If a test writes to such a directory, ensure the path is created or adjust the test to use a temporary directory.
+- **Oak Lucene shading** – integration tests that start Oak may fail if the shaded Lucene classes are not on the classpath. Keep the shade plugin configuration unchanged unless you need to bump Lucene versions.
+
+---
+## Quick Reference for Future Prompts
+- **How to locate a class**: Use `analyze` with a directory, then focus on the class name to get its inbound/outbound call graph.
+- **How to add a new module**: Create a `BUILD.bazel` file under the new module directory and call `archiva_module(name="<module-name>")` with appropriate srcs and deps, then add it to `archiva-modules/BUILD.bazel` if needed.
+- **How to update third‑party dependencies**: Edit `MODULE.bazel` – it follows the Bzlmod format; run `bazel fetch //...` afterwards.
+- **How to run Archiva with a custom config**: Edit `archiva-jetty/src/main/conf/archiva.properties` or provide a properties file via `-Darchiva.configuration=<path>` when launching the Jetty script.
+
+---
+*This AGENTS.md file is maintained to aid future contributors and prompt responders. Keep it up‑to‑date as the repository evolves.*
