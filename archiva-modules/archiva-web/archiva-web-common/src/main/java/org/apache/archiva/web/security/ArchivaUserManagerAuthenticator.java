@@ -113,27 +113,25 @@ public class ArchivaUserManagerAuthenticator
                 User user = userManager.findUser( source.getUsername() );
                 username = user.getUsername();
 
+                // A lock and an expired password are both answers to "may this account work now?", and neither is
+                // withdrawn by the password being right: the lock is what extensionExcessiveLoginAttempts puts in
+                // place when attempts pile up, and the expiry is what the deployment asked to be enforced. So both
+                // end the attempt here. Recording them and carrying on used to fall through to the success below,
+                // which answered the run the lock exists to stop with a grant - and cleared the counter that was the
+                // evidence of it. The rethrow further down keeps the catch ( Exception ) from taking them back.
                 if ( user.isLocked() )
                 {
-                    //throw new AccountLockedException( "Account " + source.getUsername() + " is locked.", user );
                     AccountLockedException e =
                         new AccountLockedException( "Account " + source.getUsername() + " is locked.", user );
                     log.warn( "{}", e.getMessage() );
-                    resultException = e;
-                    authnResultErrors.add(
-                        new AuthenticationFailureCause( AuthenticationConstants.AUTHN_LOCKED_USER_EXCEPTION,
-                                                        e.getMessage() ) );
+                    throw e;
                 }
 
                 if ( user.isPasswordChangeRequired() && source.isEnforcePasswordChange() )
                 {
-                    //throw new MustChangePasswordException( "Password expired.", user );
                     MustChangePasswordException e = new MustChangePasswordException( "Password expired.", user );
                     log.warn( "{}", e.getMessage() );
-                    resultException = e;
-                    authnResultErrors.add(
-                        new AuthenticationFailureCause( AuthenticationConstants.AUTHN_MUST_CHANGE_PASSWORD_EXCEPTION,
-                                                        e.getMessage() ) );
+                    throw e;
                 }
 
                 PasswordEncoder encoder = securityPolicy.getPasswordEncoder();
@@ -204,6 +202,13 @@ public class ArchivaUserManagerAuthenticator
                 authnResultErrors.add( new AuthenticationFailureCause( AuthenticationConstants.AUTHN_NO_SUCH_USER,
                                                                        "Login for user " + source.getUsername()
                                                                            + " failed. user not found." ) );
+            }
+            // The two states above are the answer, not a detail of this manager's attempt. Left to the catch below
+            // they would be filed as a runtime failure and the loop would move on to the next store, which is how a
+            // locked account ended up with whatever the last manager had to say about it.
+            catch ( AccountLockedException | MustChangePasswordException e )
+            {
+                throw e;
             }
             catch ( Exception e )
             {
