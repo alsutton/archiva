@@ -21,6 +21,8 @@ package org.apache.archiva.transaction;
 
 import org.apache.archiva.checksum.ChecksumAlgorithm;
 import org.apache.archiva.checksum.ChecksummedFile;
+import org.apache.archiva.checksum.UpdateStatus;
+import org.apache.archiva.checksum.UpdateStatusList;
 import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
@@ -195,7 +197,14 @@ public abstract class AbstractTransactionEvent
             }
         }
         ChecksummedFile csFile = new ChecksummedFile( file );
-        csFile.fixChecksums( getChecksumAlgorithms() );
+        UpdateStatusList status = csFile.fixChecksums( getChecksumAlgorithms() );
+        if ( status.getTotalStatus() == UpdateStatus.ERROR )
+        {
+            // The digests of the content that is about to be published could not be written. Letting
+            // the transaction continue would publish a file whose checksums are missing or stale;
+            // throwing here is what makes FileTransaction.commit() roll the whole transaction back.
+            throw new IOException( "Unable to create the checksum files of " + file, status.getTotalError() );
+        }
     }
 
     /**

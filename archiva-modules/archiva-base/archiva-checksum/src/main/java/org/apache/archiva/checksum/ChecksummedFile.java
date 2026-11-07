@@ -332,6 +332,16 @@ public class ChecksummedFile
                 log.warn( e.getMessage( ), e );
                 result.setErrorStatus(checksumAlgorithm, e);
             }
+            catch ( IOException e )
+            {
+                // A checksum file that could not be written must never be reported as CREATED or
+                // UPDATED: the artifact would be handed on as fully verified while its digest is
+                // missing or stale. The total error is what ChecksumPolicy and the file transaction
+                // use to decide that the deployment failed.
+                log.error( "Unable to write the checksum file for {}: {}", referenceFile, e.getMessage( ), e );
+                result.setErrorStatus(checksumAlgorithm, e);
+                result.setTotalError(e);
+            }
         }
 
         return result;
@@ -339,6 +349,7 @@ public class ChecksummedFile
     }
 
     private void writeChecksumFile( Path checksumFile, Charset encoding, String checksumHex )
+        throws IOException
     {
         FileUtils.writeStringToFile( checksumFile, encoding, checksumHex + "  " + referenceFile.getFileName( ).toString( ) );
     }
