@@ -58,7 +58,12 @@ public class ArchivaServletAuthenticator
     public boolean isAuthenticated( HttpServletRequest request, AuthenticationResult result )
         throws AuthenticationException, AccountLockedException, MustChangePasswordException
     {
-        if ( result != null && !result.isAuthenticated() )
+        // Deny by default. Both WebDAV call sites and the RSS servlet get this result from
+        // HttpAuthenticator.getAuthenticationResult( request, null ), which answers null when the request carried
+        // nothing to authenticate - so a missing verdict used to read as a granted one, and the request went on to
+        // isAuthorized() with a session created for the purpose. A caller with no credentials is not authenticated:
+        // it is the guest, and the call sites say so by handling the exception below with an explicit guest check.
+        if ( result == null || !result.isAuthenticated() )
         {
             throw new AuthenticationException( "User Credentials Invalid" );
         }
