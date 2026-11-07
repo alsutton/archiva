@@ -389,8 +389,20 @@ public class FileMetadataRepository
     }
 
 
+    /**
+     * Stores a facet, or reports that it could not be stored.
+     *
+     * <p>A facet that reached nowhere used to be logged and dropped, and the interface this class implements
+     * promises {@code MetadataRepositoryException if the facet cannot be stored}. That exception is the only channel
+     * there is: a caller that sees a normal return has already told somebody the record was kept. What is lost is
+     * not reproducible - audit entries name who deployed what and when, and a repository problem is the reason a
+     * scan failed - so a failure has to travel back to whoever asked for it.</p>
+     *
+     * @throws MetadataRepositoryException if the facet could not be written
+     */
     @Override
-    public void addMetadataFacet(RepositorySession session, String repositoryId, MetadataFacet metadataFacet) {
+    public void addMetadataFacet(RepositorySession session, String repositoryId, MetadataFacet metadataFacet)
+            throws MetadataRepositoryException {
         Properties properties = new Properties();
         properties.putAll(metadataFacet.toProperties());
 
@@ -399,8 +411,9 @@ public class FileMetadataRepository
                     getMetadataDirectory(repositoryId, metadataFacet.getFacetId()).resolve(metadataFacet.getName());
             writeProperties(properties, directory, METADATA_KEY);
         } catch (IOException e) {
-            // TODO!
-            log.error(e.getMessage(), e);
+            throw new MetadataRepositoryException("Cannot store metadata facet " + metadataFacet.getFacetId()
+                    + " named '" + metadataFacet.getName() + "' of repository " + repositoryId + ": " + e.getMessage(),
+                    e);
         }
     }
 
@@ -757,9 +770,20 @@ public class FileMetadataRepository
         }
     }
 
+    /**
+     * Records what is known about one artifact, or reports that the record could not be stored.
+     *
+     * <p>The write ends a scan and feeds the repository consumers, so the callers that follow it report the
+     * repository as up to date the moment this method returns. Swallowing the {@code IOException} let a scan over an
+     * unwritable metadata tree finish successfully having stored nothing, and the next scan could not tell that the
+     * records it expects were missing.</p>
+     *
+     * @throws MetadataRepositoryException if the artifact metadata could not be written
+     */
     @Override
     public void updateArtifact(RepositorySession session, String repoId, String namespace, String projectId, String projectVersion,
-                               ArtifactMetadata artifact) {
+                               ArtifactMetadata artifact)
+            throws MetadataRepositoryException {
         try {
             ProjectVersionMetadata metadata = new ProjectVersionMetadata();
             metadata.setId(projectVersion);
@@ -791,8 +815,9 @@ public class FileMetadataRepository
 
             writeProperties(properties, directory, PROJECT_VERSION_METADATA_KEY);
         } catch (IOException e) {
-            // TODO
-            log.error(e.getMessage(), e);
+            throw new MetadataRepositoryException("Cannot store metadata of artifact " + artifact.getId()
+                    + " version " + projectVersion + " of project " + namespace + ":" + projectId + " in repository "
+                    + repoId + ": " + e.getMessage(), e);
         }
     }
 
