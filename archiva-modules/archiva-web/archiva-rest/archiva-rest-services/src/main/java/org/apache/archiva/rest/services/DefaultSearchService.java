@@ -105,10 +105,10 @@ public class DefaultSearchService
         {
             return Collections.emptyList();
         }
-        List<String> repositories = searchRequest.getRepositories();
-        if ( repositories == null || repositories.isEmpty() )
+        List<String> repositories = restrictToObservableRepos( searchRequest.getRepositories() );
+        if ( repositories.isEmpty() )
         {
-            repositories = getObservableRepos();
+            return Collections.emptyList();
         }
         SearchResultLimits limits =
             new SearchResultLimits( searchRequest.getPageSize(), searchRequest.getSelectedPage() );
@@ -138,7 +138,12 @@ public class DefaultSearchService
         searchField.setGroupId( groupId );
         searchField.setArtifactId( artifactId );
         searchField.setPackaging( StringUtils.isBlank( packaging ) ? "jar" : packaging );
-        searchField.setRepositories( getObservableRepos() );
+        List<String> observableRepos = getObservableRepos();
+        if ( observableRepos.isEmpty() )
+        {
+            return Collections.emptyList();
+        }
+        searchField.setRepositories( observableRepos );
 
         try
         {
@@ -164,11 +169,12 @@ public class DefaultSearchService
         SearchResultLimits limits = new SearchResultLimits( 0 );
         limits.setPageSize( searchRequest.getPageSize() );
 
-        // if no repos set we use ones available for the user
-        if ( searchField.getRepositories() == null || searchField.getRepositories().isEmpty() )
+        List<String> repositories = restrictToObservableRepos( searchField.getRepositories() );
+        if ( repositories.isEmpty() )
         {
-            searchField.setRepositories( getObservableRepos() );
+            return Collections.emptyList();
         }
+        searchField.setRepositories( repositories );
 
         try
         {
@@ -209,11 +215,12 @@ public class DefaultSearchService
         throws ArchivaRestServiceException
     {
 
-        // if no repos set we use ones available for the user
-        if ( checksumSearch.getRepositories() == null || checksumSearch.getRepositories().isEmpty() )
+        List<String> repositories = restrictToObservableRepos( checksumSearch.getRepositories() );
+        if ( repositories.isEmpty() )
         {
-            checksumSearch.setRepositories( getObservableRepos() );
+            return Collections.emptyList();
         }
+        checksumSearch.setRepositories( repositories );
 
         RepositorySession repositorySession = null;
         try
@@ -252,6 +259,34 @@ public class DefaultSearchService
         }
 
 
+    }
+
+    /**
+     * Restricts a caller-supplied repository list to the repositories the current principal is
+     * allowed to observe.
+     *
+     * <p>An absent request means "everything I can see" and resolves to the observable set. A
+     * non-empty request is intersected with it: naming a repository explicitly must never widen a
+     * caller's own visibility, which is what made the {@code quickSearchWithRepositories},
+     * {@code searchArtifacts} and {@code getArtifactByChecksum} endpoints an unauthenticated
+     * cross-repository read.
+     *
+     * <p>The result may legitimately be empty when every requested repository is hidden from the
+     * caller. Callers must then return no results: the underlying indexer reads an empty context
+     * set as "search every index", so passing an empty list through would disclose more than
+     * the caller asked for.
+     *
+     * @param requestedRepos repository ids supplied by the caller, may be {@code null}
+     * @return the observable subset of {@code requestedRepos}, never {@code null}
+     */
+    private List<String> restrictToObservableRepos( List<String> requestedRepos )
+    {
+        List<String> observableRepos = getObservableRepos();
+        if ( requestedRepos == null || requestedRepos.isEmpty() )
+        {
+            return observableRepos;
+        }
+        return ListUtils.intersection( observableRepos, requestedRepos );
     }
 
     @Override
