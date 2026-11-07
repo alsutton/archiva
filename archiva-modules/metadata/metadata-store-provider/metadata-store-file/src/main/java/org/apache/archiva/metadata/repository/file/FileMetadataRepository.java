@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -797,16 +796,24 @@ public class FileMetadataRepository
         }
     }
 
-    private Properties readOrCreateProperties(Path directory, String propertiesKey) {
+    /**
+     * Reads {@code propertiesKey} from {@code directory}, or returns empty properties when the file
+     * has not been written yet.
+     *
+     * <p>Any other read failure is propagated. Returning empty properties for a file that exists but
+     * could not be read (full disk, IO error, concurrent backup, ...) tells the caller that the
+     * metadata is brand new, and the {@code writeProperties} that follows immediately truncates the
+     * real file to the handful of keys the caller just created. A read error has to stay an error.</p>
+     *
+     * @throws IOException if the properties exist but could not be read
+     */
+    private Properties readOrCreateProperties(Path directory, String propertiesKey) throws IOException {
         try {
             return readProperties(directory, propertiesKey);
         } catch (FileNotFoundException | NoSuchFileException e) {
-            // ignore and return new properties
-        } catch (IOException e) {
-            // TODO
-            log.error(e.getMessage(), e);
+            // nothing written yet, this is the first update of this metadata
+            return new Properties();
         }
-        return new Properties();
     }
 
     private Properties readProperties(Path directory, String propertiesKey)
@@ -1176,9 +1183,11 @@ public class FileMetadataRepository
     private void writeProperties(Properties properties, Path directory, String propertiesKey)
             throws IOException {
         Files.createDirectories(directory);
-        try (OutputStream os = Files.newOutputStream(directory.resolve(propertiesKey + ".properties"))) {
-            properties.store(os, null);
-        }
+        // do not write in place: Files.newOutputStream truncates the existing file before a single
+        // byte of the new content is there, so an interrupted store() leaves an empty or half written
+        // metadata file behind that later reads accept as the real thing.
+        Path file = directory.resolve(propertiesKey + ".properties");
+        org.apache.archiva.common.utils.FileUtils.writeAtomically(file, out -> properties.store(out, null));
     }
 
     private static class ArtifactComparator

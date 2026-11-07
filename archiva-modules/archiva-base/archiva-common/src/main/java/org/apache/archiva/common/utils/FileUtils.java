@@ -22,15 +22,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.CopyOption;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -42,6 +48,17 @@ import java.util.zip.ZipFile;
  */
 public class FileUtils {
     private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
+
+    /**
+     * Infix of the temporary files created by {@link #writeAtomically(Path, ContentWriter)}.
+     */
+    private static final String TMP_FILE_INFIX = ".tmp-";
+
+    /**
+     * Counter for temporary file names, seeded with the process start time so that two processes
+     * sharing a repository directory do not immediately pick the same names.
+     */
+    private static final AtomicInteger TMP_FILE_COUNTER = new AtomicInteger((int) (System.nanoTime() & 0xFFFF));
 
     /**
      * Deletes the directory recursively and quietly.
@@ -141,11 +158,117 @@ public class FileUtils {
         }
     }
 
-    public static void writeStringToFile(Path file, Charset encoding, String value) {
+    /**
+     * Writes {@code value} to {@code file}, atomically replacing the target.
+     * See {@link #writeAtomically(Path, ContentWriter)} for the guarantees.
+     *
+     * @throws IOException if the content could not be written in full. Write failures used to be
+     *         logged and swallowed, which let callers proceed as if the file were on disk.
+     */
+    public static void writeStringToFile(Path file, Charset encoding, String value) throws IOException {
+        writeAtomically(file, out -> out.write(value.getBytes(encoding)));
+    }
+
+    /**
+     * Writes the content of a file to the stream handed to it. Used by
+     * {@link #writeAtomically(Path, ContentWriter)}; the stream is closed by the caller.
+     */
+    @FunctionalInterface
+    public interface ContentWriter {
+        void write(OutputStream out) throws IOException;
+    }
+
+    /**
+     * Writes {@code file} by filling a temporary file in the same directory, flushing it to the
+     * store and renaming it over the target.
+     *
+     * <p>Two properties are the reason this exists:</p>
+     * <ul>
+     *     <li><b>no half written files.</b> A concurrent or subsequent reader sees either the previous
+     *     content or the complete new content, never an empty or truncated one. For a checksum file a
+     *     truncated digest that still parses is worse than a missing one, and a reader that is not
+     *     looking at a digest can accept a truncated artifact as complete.</li>
+     *     <li><b>visible failures.</b> Every step propagates {@link IOException}: the target is only
+     *     replaced once the whole content has reached the store.</li>
+     * </ul>
+     *
+     * <p>Note that the target is replaced rather than written through, so if {@code file} is a
+     * symbolic link it is replaced by a regular file.</p>
+     *
+     * @param file    the file to write
+     * @param content receives the stream of the temporary file and writes the whole content to it
+     * @throws IOException if the content could not be written completely, in which case {@code file}
+     *                     still holds its previous content (or does not exist)
+     */
+    public static void writeAtomically(Path file, ContentWriter content) throws IOException {
+        Path tempFile = newTempFile(file);
         try {
-            Files.write(file, value.getBytes(encoding), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException e) {
-            log.error("Could not write to file {}", file);
+            try (FileChannel channel = FileChannel.open(tempFile, StandardOpenOption.WRITE,
+                                                        StandardOpenOption.TRUNCATE_EXISTING);
+                 OutputStream out = Channels.newOutputStream(channel)) {
+                content.write(out);
+                out.flush();
+                // make sure the content is at rest before the rename publishes it
+                channel.force(true);
+            }
+            keepPermissions(file, tempFile);
+            try {
+                Files.move(tempFile, file, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException | FileAlreadyExistsException e) {
+                // filesystems that cannot replace an existing file atomically (among them several
+                // network mounts). Falling back to a plain replace is not worse than what the caller
+                // asked for when it wrote the target directly.
+                try {
+                    Files.move(tempFile, file, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException fallbackFailure) {
+                    fallbackFailure.addSuppressed(e);
+                    throw fallbackFailure;
+                }
+            }
+        } finally {
+            // only reached when the move did not happen; a move has already removed the source
+            try {
+                Files.deleteIfExists(tempFile);
+            } catch (IOException e) {
+                log.debug("Could not remove temporary file {}: {}", tempFile, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Creates an empty file next to {@code file} with a name that no other writer of the same target
+     * picks, so that two concurrent writes cannot publish each other's content.
+     */
+    private static Path newTempFile(Path file) throws IOException {
+        for (int attempt = 0; attempt < 16; attempt++) {
+            Path candidate = file.resolveSibling(file.getFileName() + TMP_FILE_INFIX + TMP_FILE_COUNTER.getAndIncrement());
+            try {
+                // deliberately Files.createFile and not Files.createTempFile: the latter creates the
+                // file readable by its owner only, which would silently change the mode of the file
+                // being replaced.
+                Files.createFile(candidate);
+                return candidate;
+            } catch (FileAlreadyExistsException e) {
+                // name of an interrupted earlier run, take the next one
+            }
+        }
+        throw new IOException("Could not create a temporary file next to " + file);
+    }
+
+    /**
+     * Copies the mode of {@code file} to {@code tempFile}, so that replacing the former does not
+     * change the permissions of the stored content.
+     */
+    private static void keepPermissions(Path file, Path tempFile) {
+        if (!Files.exists(file, LinkOption.NOFOLLOW_LINKS)) {
+            return;
+        }
+        try {
+            Files.setPosixFilePermissions(tempFile, Files.getPosixFilePermissions(file));
+        } catch (UnsupportedOperationException | IOException e) {
+            // not a posix file store, or the mode is unreadable: the replacement then keeps the mode a
+            // newly created file gets, which is what the replaced file had when it was created
+            log.debug("Permissions of {} could not be preserved on {}: {}", file, tempFile, e.getMessage());
         }
     }
 
