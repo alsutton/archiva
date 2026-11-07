@@ -380,10 +380,15 @@ public class FilesystemAsset implements StorageAsset, Comparable {
         try {
             if (supportsPosix) {
                 Set<PosixFilePermission> perms;
+                // Note the two branches are not interchangeable: DEFAULT_POSIX_FILE_PERMS is
+                // "rw-rw----" and carries no execute bit, which on a directory means "cannot be
+                // traversed" - entries below it could not be looked up or opened, not even by the
+                // owner. The ACL branch below already maps directories to directories and files to
+                // files; the POSIX branch has to do the same.
                 if (Files.isDirectory(filePath)) {
-                    perms = defaultPosixFilePermissions;
-                } else {
                     perms = defaultPosixDirectoryPermissions;
+                } else {
+                    perms = defaultPosixFilePermissions;
                 }
                 Files.setPosixFilePermissions(filePath, perms);
             } else if (supportsAcl) {
