@@ -1,4 +1,5 @@
 load("//tools/bazel:archiva.bzl", "archiva_module")
+load("@rules_java//java:defs.bzl", "java_test")
 
 archiva_module(
     name = "metadata-store-jcr",
@@ -9,6 +10,9 @@ archiva_module(
         "//archiva-modules/archiva-base/archiva-common",
         "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-model",
         "//archiva-modules/archiva-base/archiva-configuration/archiva-configuration-provider",
+        # for RepositoryValidator.REPOSITORY_ID_VALID_EXPRESSION: the identifier allow-list is the
+        # administration layer's, and the store has to apply the same one to refuse what was never allowed
+        "//archiva-modules/archiva-base/archiva-repository-api",
         "//archiva-modules/archiva-maven/archiva-maven-metadata",
         "//archiva-modules/metadata/metadata-model",
         "//archiva-modules/metadata/metadata-repository-api",
@@ -35,5 +39,24 @@ archiva_module(
         "@maven//:org_apache_jackrabbit_oak_store_spi",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_spring_context",
+    ],
+)
+
+# The module-wide skip_tests above excludes the tests that need a booted Oak repository and a Spring context.
+# This one needs neither: it shows the store a JCR session that records the statements it is handed, which is
+# the only way to see what scope a query was given - and that a refused repository identifier never became one.
+java_test(
+    name = "org.apache.archiva.metadata.repository.jcr.JcrMetadataRepositoryQueryScopeTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/metadata/repository/jcr/JcrMetadataRepositoryQueryScopeTest.java",
+    ],
+    test_class = "org.apache.archiva.metadata.repository.jcr.JcrMetadataRepositoryQueryScopeTest",
+    deps = [
+        ":metadata-store-jcr",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "@maven//:javax_jcr_jcr",
+        "@maven//:junit_junit",
     ],
 )
