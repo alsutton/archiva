@@ -35,9 +35,11 @@ import org.apache.archiva.rest.api.services.ArchivaRestServiceException;
 import org.apache.archiva.rest.api.services.MergeRepositoriesService;
 import org.apache.archiva.stagerepository.merge.RepositoryMerger;
 import org.apache.archiva.stagerepository.merge.RepositoryMergerException;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,6 +66,9 @@ public class DefaultMergeRepositoriesService
     public List<Artifact> getMergeConflictedArtifacts( String sourceRepositoryId, String targetRepositoryId )
         throws ArchivaRestServiceException
     {
+        // reading conflicts back means reading the target's metadata, so the caller needs rights on it too
+        checkTargetIsMergeable( targetRepositoryId );
+
         RepositorySession repositorySession = null;
         try
         {
@@ -106,6 +111,10 @@ public class DefaultMergeRepositoriesService
     public void mergeRepositories( String sourceRepositoryId, String targetRepositoryId, boolean skipConflicts )
         throws ArchivaRestServiceException
     {
+        // the annotation can only bind one resource, and it binds the source: without this the target of a
+        // merge is never authorized, so managing any repository is enough to write into every other one
+        checkTargetIsMergeable( targetRepositoryId );
+
         try
         {
             RepositoryMerger merger = findMerger( sourceRepositoryId );
@@ -127,6 +136,27 @@ public class DefaultMergeRepositoriesService
 
     }
 
+
+    /**
+     * A merge writes into the target repository and triggers a scan of it, so the caller needs write rights on the
+     * target as well as merge rights on the source. The {@code @RedbackAuthorization} annotation binds a single
+     * resource and binds it to the source, so the target has to be checked here.
+     */
+    protected void checkTargetIsMergeable( String targetRepositoryId )
+        throws ArchivaRestServiceException
+    {
+        if ( StringUtils.isEmpty( targetRepositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "merge.repositories.target.missing",
+                                                   Response.Status.BAD_REQUEST.getStatusCode(), null );
+        }
+
+        if ( !getManageableRepos().contains( targetRepositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "merge.repositories.target.denied",
+                                                   Response.Status.FORBIDDEN.getStatusCode(), null );
+        }
+    }
 
     protected void doMerge( RepositoryMerger merger, String sourceRepositoryId, String targetRepositoryId )
         throws RepositoryMergerException, ArchivaRestServiceException

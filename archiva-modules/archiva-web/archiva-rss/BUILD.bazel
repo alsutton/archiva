@@ -1,3 +1,4 @@
+load("@rules_java//java:defs.bzl", "java_test")
 load("//tools/bazel:archiva.bzl", "archiva_module")
 
 archiva_module(
@@ -12,5 +13,25 @@ archiva_module(
         "@maven//:javax_inject_javax_inject",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_spring_context",
+    ],
+)
+
+# The module-wide skip_tests above excludes tests that need a Spring/Redback context. This one constructs the
+# processor directly, so the repository scoping of the "new versions" feed - the only feed whose scope is not
+# fixed by the URL - is checkable on its own.
+java_test(
+    name = "org.apache.archiva.rss.processor.NewVersionsOfArtifactRssFeedProcessorRepoScopeTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/rss/processor/NewVersionsOfArtifactRssFeedProcessorRepoScopeTest.java",
+    ],
+    test_class = "org.apache.archiva.rss.processor.NewVersionsOfArtifactRssFeedProcessorRepoScopeTest",
+    deps = [
+        ":archiva-rss",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "@maven//:com_rometools_rome",
+        "@maven//:junit_junit",
     ],
 )

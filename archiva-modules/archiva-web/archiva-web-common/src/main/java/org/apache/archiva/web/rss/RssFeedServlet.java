@@ -151,7 +151,9 @@ public class RssFeedServlet
             Map<String, String> map = new HashMap<>();
             SyndFeed feed = null;
 
-            if ( isAllowed( req, repoId, groupId, artifactId ) )
+            List<String> readableRepos = readableRepositories( req, repoId, groupId, artifactId );
+
+            if ( !readableRepos.isEmpty() )
             {
                 if ( repoId != null )
                 {
@@ -161,11 +163,13 @@ public class RssFeedServlet
                 }
                 else if ( ( groupId != null ) && ( artifactId != null ) )
                 {
-                    // TODO: this only works for guest - we could pass in the list of repos
-                    // new versions of artifact feed request
+                    // new versions of artifact feed request: the artifact may live in several repositories,
+                    // so the ones this caller may read are handed to the processor instead of letting it
+                    // decide for itself
                     processor = newVersionsprocessor;
                     map.put( RssFeedProcessor.KEY_GROUP_ID, groupId );
                     map.put( RssFeedProcessor.KEY_ARTIFACT_ID, artifactId );
+                    map.put( RssFeedProcessor.KEY_REPO_IDS, StringUtils.join( readableRepos, "," ) );
                 }
             }
             else
@@ -243,9 +247,12 @@ public class RssFeedServlet
      * @param repositoryId TODO
      * @param groupId      TODO
      * @param artifactId   TODO
-     * @return
+     * @return the repositories this requester may read for this feed, empty if the request carries nothing
+     *         this servlet can decide about
+     * @throws UnauthorizedException if the requester may read none of the repositories in scope
      */
-    private boolean isAllowed( HttpServletRequest req, String repositoryId, String groupId, String artifactId )
+    private List<String> readableRepositories( HttpServletRequest req, String repositoryId, String groupId,
+                                               String artifactId )
         throws UserNotFoundException, AccountLockedException, AuthenticationException, MustChangePasswordException,
         UnauthorizedException
     {
@@ -262,7 +269,7 @@ public class RssFeedServlet
             {
                 if ( !auth.toUpperCase().startsWith( "BASIC " ) )
                 {
-                    return false;
+                    return Collections.emptyList();
                 }
 
                 Decoder dec = new Base64();
@@ -294,8 +301,10 @@ public class RssFeedServlet
         }
         else
         {
-            return false;
+            return Collections.emptyList();
         }
+
+        List<String> readable = new ArrayList<>();
 
         for ( String repoId : repoIds )
         {
@@ -310,7 +319,7 @@ public class RssFeedServlet
                                                  repoId, //
                                                  ArchivaRoleConstants.OPERATION_READ_REPOSITORY ) )
                 {
-                    return true;
+                    readable.add( repoId );
                 }
             }
             catch ( AuthorizationException e )
@@ -323,7 +332,12 @@ public class RssFeedServlet
             }
         }
 
-        throw new UnauthorizedException( "Access denied." );
+        if ( readable.isEmpty() )
+        {
+            throw new UnauthorizedException( "Access denied." );
+        }
+
+        return readable;
     }
 
     private List<String> getObservableRepos( String principal )

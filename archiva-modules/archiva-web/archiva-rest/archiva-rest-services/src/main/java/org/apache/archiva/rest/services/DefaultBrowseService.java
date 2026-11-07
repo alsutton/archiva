@@ -995,6 +995,7 @@ public class DefaultBrowseService
         }
         try
         {
+            observableRepositoriesFor( repositoryId );
             List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifacts(repositorySession , repositoryId );
             return buildArtifacts( artifactMetadatas, repositoryId );
         }
@@ -1023,8 +1024,13 @@ public class DefaultBrowseService
         }
         try
         {
-            List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifactsByProjectVersionFacet(repositorySession , key, value, repositoryId );
-            return buildArtifacts( artifactMetadatas, repositoryId );
+            List<Artifact> artifacts = new ArrayList<>();
+            for ( String repoId : observableRepositoriesFor( repositoryId ) )
+            {
+                List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifactsByProjectVersionFacet(repositorySession , key, value, repoId );
+                artifacts.addAll( buildArtifacts( artifactMetadatas, repoId ) );
+            }
+            return artifacts;
         }
         catch ( MetadataRepositoryException e )
         {
@@ -1051,8 +1057,13 @@ public class DefaultBrowseService
         }
         try
         {
-            List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifactsByAttribute(repositorySession , key, value, repositoryId );
-            return buildArtifacts( artifactMetadatas, repositoryId );
+            List<Artifact> artifacts = new ArrayList<>();
+            for ( String repoId : observableRepositoriesFor( repositoryId ) )
+            {
+                List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifactsByAttribute(repositorySession , key, value, repoId );
+                artifacts.addAll( buildArtifacts( artifactMetadatas, repoId ) );
+            }
+            return artifacts;
         }
         catch ( MetadataRepositoryException e )
         {
@@ -1079,8 +1090,13 @@ public class DefaultBrowseService
         }
         try
         {
-            List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifactsByProjectVersionAttribute(repositorySession , key, value, repositoryId );
-            return buildArtifacts( artifactMetadatas, repositoryId );
+            List<Artifact> artifacts = new ArrayList<>();
+            for ( String repoId : observableRepositoriesFor( repositoryId ) )
+            {
+                List<ArtifactMetadata> artifactMetadatas = repositorySession.getRepository().getArtifactsByProjectVersionAttribute(repositorySession , key, value, repoId );
+                artifacts.addAll( buildArtifacts( artifactMetadatas, repoId ) );
+            }
+            return artifacts;
         }
         catch ( MetadataRepositoryException e )
         {
@@ -1116,9 +1132,14 @@ public class DefaultBrowseService
     {
         try(RepositorySession repositorySession = repositorySessionFactory.createSession())
         {
-            List<ArtifactMetadata> artifactMetadatas =
-                repositorySession.getRepository().searchArtifacts(repositorySession , repositoryId, text, exact == null ? false : exact );
-            return buildArtifacts( artifactMetadatas, repositoryId );
+            List<Artifact> artifacts = new ArrayList<>();
+            for ( String repoId : observableRepositoriesFor( repositoryId ) )
+            {
+                List<ArtifactMetadata> artifactMetadatas =
+                    repositorySession.getRepository().searchArtifacts(repositorySession , repoId, text, exact == null ? false : exact );
+                artifacts.addAll( buildArtifacts( artifactMetadatas, repoId ) );
+            }
+            return artifacts;
         }
         catch ( MetadataRepositoryException e )
         {
@@ -1141,9 +1162,14 @@ public class DefaultBrowseService
         }
         try
         {
-            List<ArtifactMetadata> artifactMetadatas =
-                repositorySession.getRepository().searchArtifacts(repositorySession , repositoryId, key, text, exact == null ? false : exact );
-            return buildArtifacts( artifactMetadatas, repositoryId );
+            List<Artifact> artifacts = new ArrayList<>();
+            for ( String repoId : observableRepositoriesFor( repositoryId ) )
+            {
+                List<ArtifactMetadata> artifactMetadatas =
+                    repositorySession.getRepository().searchArtifacts(repositorySession , repoId, key, text, exact == null ? false : exact );
+                artifacts.addAll( buildArtifacts( artifactMetadatas, repoId ) );
+            }
+            return artifacts;
         }
         catch ( MetadataRepositoryException e )
         {
@@ -1294,6 +1320,34 @@ public class DefaultBrowseService
             return StringUtils.substringBefore( path, "/" );
         }
         return path;
+    }
+
+
+    /**
+     * The repositories a browse request is allowed to read: the single repository named by the caller, or every
+     * repository the caller can observe when none was named. Naming a repository the caller cannot observe is
+     * refused outright rather than being answered from it, which is what made these endpoints a way to read
+     * private repositories without credentials.
+     *
+     * @throws ArchivaRestServiceException if the caller may not observe the requested repository
+     */
+    private List<String> observableRepositoriesFor( String repositoryId )
+        throws ArchivaRestServiceException
+    {
+        List<String> observableRepos = getObservableRepos();
+
+        if ( StringUtils.isEmpty( repositoryId ) )
+        {
+            return observableRepos;
+        }
+
+        if ( !observableRepos.contains( repositoryId ) )
+        {
+            throw new ArchivaRestServiceException( "browse.root.groups.repositoy.denied",
+                                                   Response.Status.FORBIDDEN.getStatusCode(), null );
+        }
+
+        return Collections.singletonList( repositoryId );
     }
 
     private List<String> getSelectedRepos( String repositoryId )
