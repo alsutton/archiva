@@ -113,6 +113,95 @@ public class FilesystemAssetPermissionsTest
         }
     }
 
+    /**
+     * The layout Archiva actually stores is a nest of containers - repository root, group,
+     * artifact, version - and every level of it is created through this class. A single level
+     * without a traverse bit makes everything below it unreachable, so a container has to be able
+     * to hold another container that was itself created by the code under test.
+     */
+    @Test
+    public void containersCanBeNestedAsDeepAsARepositoryNeeds() throws IOException
+    {
+        assumePosixFilesystem();
+        Path baseDir = Files.createTempDirectory( "archivaPermsNest" );
+        try
+        {
+            FilesystemStorage storage = new FilesystemStorage( baseDir, new DefaultFileLockManager() );
+
+            createContainer( storage, baseDir, "repo" );
+            createContainer( storage, baseDir, "repo/commons-io" );
+            FilesystemAsset versionDir = createContainer( storage, baseDir, "repo/commons-io/2.11.0" );
+
+            Path artifact = versionDir.getFilePath().resolve( "commons-io-2.11.0.jar" );
+            Files.createFile( artifact );
+            assertTrue( Files.exists( artifact ), "an artifact could not be stored in its version directory" );
+        }
+        finally
+        {
+            FileUtils.deleteQuietly( baseDir.toFile() );
+        }
+    }
+
+    /**
+     * {@code replaceDataFromFile} is how a staged upload is promoted into its final place, and it
+     * re-applies the default permissions to whatever landed there. It has to hand back the bytes
+     * that were staged, and an artifact that is not an executable.
+     */
+    @Test
+    public void replacingAnAssetsDataKeepsItReadableAndNonExecutable() throws IOException
+    {
+        assumePosixFilesystem();
+        Path baseDir = Files.createTempDirectory( "archivaPermsReplace" );
+        try
+        {
+            // Built with plain NIO: this test is about the permissions replaceDataFromFile applies,
+            // not about container creation.
+            Files.createDirectories( baseDir.resolve( "repo" ) );
+
+            FilesystemStorage storage = new FilesystemStorage( baseDir, new DefaultFileLockManager() );
+            FilesystemAsset asset =
+                new FilesystemAsset( storage, "/repo/artifact.jar", baseDir.resolve( "repo/artifact.jar" ), baseDir,
+                                      false, true );
+
+            Path staged = baseDir.resolve( "staged.jar" );
+            Files.writeString( staged, "the staged artifact bytes" );
+
+            assertTrue( asset.replaceDataFromFile( staged ), "the staged upload was not promoted" );
+
+            Set<PosixFilePermission> perms = Files.getPosixFilePermissions( asset.getFilePath() );
+            String permsString = PosixFilePermissions.toString( perms );
+            assertEquals( FilesystemAsset.DEFAULT_POSIX_FILE_PERMS, permsString,
+                          "a promoted artifact must carry the file permissions" );
+            assertFalse( perms.contains( PosixFilePermission.OWNER_EXECUTE ),
+                         "a promoted artifact must not be executable: " + permsString );
+            assertEquals( "the staged artifact bytes", Files.readString( asset.getFilePath() ),
+                          "promoting an upload must not change the artifact" );
+        }
+        finally
+        {
+            FileUtils.deleteQuietly( baseDir.toFile() );
+        }
+    }
+
+    /**
+     * Creates a container the way the storage layer does and pins the mode it ended up with, so
+     * the first level of a nest that cannot be traversed names itself in the failure.
+     */
+    private static FilesystemAsset createContainer( FilesystemStorage storage, Path baseDir, String relativePath )
+        throws IOException
+    {
+        FilesystemAsset container =
+            new FilesystemAsset( storage, "/" + relativePath, baseDir.resolve( relativePath ), baseDir, true, true );
+
+        container.create( AssetType.CONTAINER );
+
+        String perms = PosixFilePermissions.toString( Files.getPosixFilePermissions( container.getFilePath() ) );
+        assertEquals( FilesystemAsset.DEFAULT_POSIX_DIR_PERMS, perms,
+                      container.getPath() + " was created as " + perms + ", which cannot be traversed" );
+
+        return container;
+    }
+
     private static void assumePosixFilesystem() throws IOException
     {
         Path root = Paths.get( "." ).toAbsolutePath().getRoot();
