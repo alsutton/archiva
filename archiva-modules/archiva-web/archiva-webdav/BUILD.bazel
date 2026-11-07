@@ -1,4 +1,5 @@
 load("//tools/bazel:archiva.bzl", "archiva_module")
+load("@rules_java//java:defs.bzl", "java_test")
 
 archiva_module(
     name = "archiva-webdav",
@@ -38,10 +39,33 @@ archiva_module(
         "@maven//:org_apache_archiva_redback_redback_users_api",
         "@maven//:org_apache_commons_commons_collections4",
         "@maven//:org_apache_commons_commons_lang3",
+        # for StringEscapeUtils: the listing is HTML built by hand, and every value in it arrives from a request
+        # or from a directory a deployer wrote
+        "@maven//:org_apache_commons_commons_text",
         "@maven//:org_apache_jackrabbit_jackrabbit_webdav",
         "@maven//:org_apache_jackrabbit_jackrabbit_jcr_commons",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_spring_context",
         "@maven//:org_springframework_spring_web",
+    ],
+)
+
+# The module-wide skip_tests above excludes the tests that need a booted repository and a Spring context. This one
+# needs neither: it hands the writer a directory listing and a recording response, which is the only way to see the
+# page it produces for whoever browses it.
+java_test(
+    name = "org.apache.archiva.webdav.util.IndexWriterXssTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/webdav/util/IndexWriterXssTest.java",
+    ],
+    test_class = "org.apache.archiva.webdav.util.IndexWriterXssTest",
+    deps = [
+        ":archiva-webdav",
+        "//archiva-modules/archiva-base/archiva-storage-api",
+        "@maven//:javax_jcr_jcr",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_jackrabbit_jackrabbit_jcr_commons",
+        "@maven//:org_apache_jackrabbit_jackrabbit_webdav",
     ],
 )

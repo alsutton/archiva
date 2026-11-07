@@ -25,6 +25,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -145,6 +146,44 @@ public class XMLReader
         }
     }
 
+    /**
+     * Refuses a document that declares a document type at all.
+     *
+     * <p>What is parsed here is not the service's own document: the only production consumer is
+     * {@code MavenMetadataReader}, and a {@code maven-metadata.xml} is downloaded verbatim from whatever remote
+     * repository is being proxied and accepted over a WebDAV {@code PUT} from anyone with write rights, while this
+     * parser runs as the Archiva service user. Nothing such a document legitimately contains refers to a second
+     * document, so a reference to one is refused rather than followed carefully.
+     *
+     * <p>{@code FEATURE_SECURE_PROCESSING} - the one setting that was live - bounds entity <em>expansion</em> and
+     * resolves external entities without complaint, and {@code setExpandEntityReferences(false)} only keeps the
+     * result out of the tree: by the time it would apply, the file has been read or the request made, which is all
+     * a disclosure needs. A parser that will not accept one of these is a parser this class cannot make safe, so
+     * it surfaces as an unparseable document instead of being parsed unsafely.
+     */
+    private static final String DISALLOW_DOCTYPE_DECL =
+        "http://apache.org/xml/features/disallow-doctype-decl";
+
+    private static final String EXTERNAL_GENERAL_ENTITIES = "http://xml.org/sax/features/external-general-entities";
+
+    private static final String EXTERNAL_PARAMETER_ENTITIES =
+        "http://xml.org/sax/features/external-parameter-entities";
+
+    private static final String LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd";
+
+    /**
+     * The last place a reference could turn into a request. The declaration check above is what refuses a
+     * document, so this resolver should never be reached: it is here because never is a property of one parser
+     * implementation, and because the features below are settings a parser is free to ignore, whereas a resolver
+     * that has no answer but no is the answer this class means to give.
+     *
+     * <p>It says no without quoting what was asked for. The answer travels back out as an {@code XMLException}
+     * message, and a message about a document is no place for the contents of that document.
+     */
+    private static final EntityResolver REFUSE_TO_RESOLVE = ( publicId, systemId ) -> {
+        throw new SAXException( "External entities are not resolved: a document type declaration is refused" );
+    };
+
     private void initWithStream( String type, URL url, InputStream in  )
         throws XMLException
     {
@@ -161,11 +200,17 @@ public class XMLReader
             dbf.setNamespaceAware(true);
             dbf.setExpandEntityReferences(false);
             dbf.setValidating(false);
-            // dbf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD,"false");
+            dbf.setXIncludeAware(false);
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING,true);
-            // dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            dbf.setFeature(DISALLOW_DOCTYPE_DECL, true);
+            dbf.setFeature(EXTERNAL_GENERAL_ENTITIES, false);
+            dbf.setFeature(EXTERNAL_PARAMETER_ENTITIES, false);
+            dbf.setFeature(LOAD_EXTERNAL_DTD, false);
+            dbf.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            dbf.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
             DocumentBuilder db = dbf.newDocumentBuilder();
+            db.setEntityResolver(REFUSE_TO_RESOLVE);
             // To suppress error output at System.err
             db.setErrorHandler(new ErrorHandler() {
                 @Override
