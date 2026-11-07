@@ -1,4 +1,5 @@
 load("//tools/bazel:archiva.bzl", "archiva_module")
+load("@rules_java//java:defs.bzl", "java_test")
 
 archiva_module(
     name = "archiva-security",
@@ -56,5 +57,27 @@ archiva_module(
         "@maven//:org_apache_logging_log4j_log4j_slf4j_impl",
         "@maven//:org_apache_logging_log4j_log4j_core",
         "@maven//:org_springframework_spring_beans",
+    ],
+)
+
+# The module-wide skip_tests above excludes the tests that need a booted Redback context and the JDO user store. This
+# one needs neither: it asks the authenticator what it makes of a request nobody produced a verdict for, which is a
+# property of one condition and is only answerable by calling it.
+java_test(
+    name = "org.apache.archiva.security.ArchivaServletAuthenticatorNullResultTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/security/ArchivaServletAuthenticatorNullResultTest.java",
+    ],
+    test_class = "org.apache.archiva.security.ArchivaServletAuthenticatorNullResultTest",
+    deps = [
+        ":archiva-security",
+        "@maven//:jakarta_servlet_jakarta_servlet_api",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_archiva_redback_redback_authentication_api",
+        "@maven//:org_apache_archiva_redback_redback_authorization_api",
+        "@maven//:org_apache_archiva_redback_redback_policy",
+        "@maven//:org_apache_archiva_redback_redback_system",
+        "@maven//:org_apache_archiva_redback_redback_users_api",
     ],
 )
