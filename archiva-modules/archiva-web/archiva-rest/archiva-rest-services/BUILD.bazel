@@ -102,3 +102,57 @@ java_test(
         "@maven//:junit_junit",
     ],
 )
+
+# Same reasoning as the search service test above: these three services gate a request on the caller's
+# repository rights in plain Java, so the behaviour is checkable without Redback's user manager or a running
+# metadata store. Each test stands its service up by hand with the observable/manageable sets pinned.
+java_test(
+    name = "org.apache.archiva.rest.services.DefaultBrowseServiceObservableRepositoryTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/rest/services/DefaultBrowseServiceObservableRepositoryTest.java",
+    ],
+    test_class = "org.apache.archiva.rest.services.DefaultBrowseServiceObservableRepositoryTest",
+    deps = [
+        ":archiva-rest-services",
+        "//archiva-modules/archiva-maven/archiva-maven-model",
+        "//archiva-modules/archiva-web/archiva-rest/archiva-rest-api",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "org.apache.archiva.rest.services.DefaultReportRepositoriesServiceStatisticsAccessTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/rest/services/DefaultReportRepositoriesServiceStatisticsAccessTest.java",
+    ],
+    test_class = "org.apache.archiva.rest.services.DefaultReportRepositoriesServiceStatisticsAccessTest",
+    deps = [
+        ":archiva-rest-services",
+        "//archiva-modules/archiva-web/archiva-rest/archiva-rest-api",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//archiva-modules/metadata/metadata-statistics-api",
+        "@maven//:junit_junit",
+    ],
+)
+
+java_test(
+    name = "org.apache.archiva.rest.services.DefaultMergeRepositoriesServiceTargetAuthorizationTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/rest/services/DefaultMergeRepositoriesServiceTargetAuthorizationTest.java",
+    ],
+    test_class = "org.apache.archiva.rest.services.DefaultMergeRepositoriesServiceTargetAuthorizationTest",
+    deps = [
+        ":archiva-rest-services",
+        "//archiva-modules/archiva-base/archiva-repository-api",
+        "//archiva-modules/archiva-scheduler/archiva-scheduler-repository-api",
+        "//archiva-modules/archiva-web/archiva-rest/archiva-rest-api",
+        "//archiva-modules/metadata/metadata-model",
+        "//archiva-modules/metadata/metadata-repository-api",
+        "//archiva-modules/plugins/stage-repository-merge",
+        "@maven//:junit_junit",
+    ],
+)

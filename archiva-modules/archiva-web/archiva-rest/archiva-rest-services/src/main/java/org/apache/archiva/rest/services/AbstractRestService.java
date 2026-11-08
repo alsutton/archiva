@@ -159,6 +159,32 @@ public abstract class AbstractRestService
         return Collections.emptyList();
     }
 
+    /**
+     * The repository ids the current principal may write to. Same failure behaviour as
+     * {@link #getObservableRepos()}: an unresolvable principal grants nothing.
+     */
+    protected List<String> getManageableRepos()
+    {
+        try
+        {
+            List<String> ids = userRepositories.getManagableRepositoryIds( getPrincipal() );
+            return ids == null ? Collections.<String>emptyList() : ids;
+        }
+        catch ( PrincipalNotFoundException e )
+        {
+            log.warn( e.getMessage(), e );
+        }
+        catch ( AccessDeniedException e )
+        {
+            log.warn( e.getMessage(), e );
+        }
+        catch ( ArchivaSecurityException e )
+        {
+            log.warn( e.getMessage(), e );
+        }
+        return Collections.emptyList();
+    }
+
     protected String getPrincipal()
     {
         RedbackRequestInformation redbackRequestInformation = RedbackAuthenticationThreadLocal.get();
