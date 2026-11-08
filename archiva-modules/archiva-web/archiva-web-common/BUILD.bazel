@@ -1,4 +1,5 @@
 load("//tools/bazel:archiva.bzl", "archiva_module")
+load("@rules_java//java:defs.bzl", "java_test")
 
 archiva_module(
     name = "archiva-web-common",
@@ -61,5 +62,39 @@ archiva_module(
         "@maven//:org_springframework_spring_context",
         "@maven//:org_springframework_spring_core",
         "@maven//:org_springframework_spring_web",
+    ],
+)
+
+# The module-wide skip_tests above excludes the tests that need the LDAP and JCR Spring contexts to stand up a real
+# user store and RBAC manager. These two hand the class under test a manager it can watch, which is the only way to
+# see who it asked and what it decided: the login answer for every basic-auth endpoint, and which store a granted
+# permission was written to.
+java_test(
+    name = "org.apache.archiva.web.security.ArchivaUserManagerAuthenticatorLockoutTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/web/security/ArchivaUserManagerAuthenticatorLockoutTest.java",
+    ],
+    test_class = "org.apache.archiva.web.security.ArchivaUserManagerAuthenticatorLockoutTest",
+    deps = [
+        ":archiva-web-common",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_archiva_redback_redback_authentication_api",
+        "@maven//:org_apache_archiva_redback_redback_policy",
+        "@maven//:org_apache_archiva_redback_redback_users_api",
+    ],
+)
+
+java_test(
+    name = "org.apache.archiva.web.security.ArchivaRbacManagerSavePermissionTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/web/security/ArchivaRbacManagerSavePermissionTest.java",
+    ],
+    test_class = "org.apache.archiva.web.security.ArchivaRbacManagerSavePermissionTest",
+    deps = [
+        ":archiva-web-common",
+        "//third_party/redback/redback-rbac-model",
+        "@maven//:junit_junit",
     ],
 )

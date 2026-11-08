@@ -32,6 +32,8 @@ import org.apache.archiva.redback.rbac.Resource;
 import org.apache.archiva.redback.rbac.Role;
 import org.apache.archiva.redback.rbac.UserAssignment;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -54,6 +56,7 @@ public class ArchivaRbacManager
     extends AbstractRBACManager
     implements RBACManager
 {
+    private static final Logger log = LoggerFactory.getLogger( ArchivaRbacManager.class );
 
     private Map<String, RBACManager> rbacManagersPerId;
 
@@ -376,13 +379,19 @@ public class ArchivaRbacManager
         throws RbacObjectInvalidException, RbacManagerException
     {
         boolean allFailed = true;
+        boolean writableManager = false;
         Exception lastException = null;
         for ( RBACManager rbacManager : rbacManagersPerId.values() )
         {
             try
             {
-                if ( rbacManager.isReadOnly() )
+                // The guard the write below needs is the one every other write in this class has: the read-only
+                // managers publish records this instance does not own, and the writable one is the only place a
+                // permission can be kept. Reversed, a normal deployment saved a permission by asking the directory
+                // to write it and skipping the store that would have taken it - then reported success.
+                if ( !rbacManager.isReadOnly() )
                 {
+                    writableManager = true;
                     permission = rbacManager.savePermission( permission );
                     allFailed = false;
                 }
@@ -391,6 +400,14 @@ public class ArchivaRbacManager
             {
                 lastException = e;
             }
+        }
+
+        if ( !writableManager )
+        {
+            // Nothing in this instance can hold a permission. Say so: the caller is about to be handed back its own
+            // object, and there is no way for it to tell that from a save.
+            log.warn( "No writable rbac manager is configured, permission '{}' has not been saved",
+                      permission.getName() );
         }
 
         if ( lastException != null && allFailed )

@@ -69,3 +69,26 @@ java_test(
         "@maven//:org_apache_jackrabbit_jackrabbit_webdav",
     ],
 )
+
+# The module-wide skip_tests above excludes the tests that need the Jackrabbit repository and the Spring DI stack
+# behind it. This one needs neither: it asks the session provider when it puts a session on a request, and the
+# answer is a call order that only showing up at the gate can show.
+java_test(
+    name = "org.apache.archiva.webdav.ArchivaDavSessionProviderAttachTest",
+    size = "small",
+    srcs = [
+        "src/test/java/org/apache/archiva/webdav/ArchivaDavSessionProviderAttachTest.java",
+    ],
+    test_class = "org.apache.archiva.webdav.ArchivaDavSessionProviderAttachTest",
+    deps = [
+        ":archiva-webdav",
+        "//archiva-modules/archiva-web/archiva-security",
+        "@maven//:jakarta_servlet_jakarta_servlet_api",
+        "@maven//:junit_junit",
+        "@maven//:org_apache_archiva_redback_redback_authentication_api",
+        "@maven//:org_apache_archiva_redback_redback_common_integrations",
+        "@maven//:org_apache_archiva_redback_redback_policy",
+        "@maven//:org_apache_archiva_redback_redback_users_api",
+        "@maven//:org_apache_jackrabbit_jackrabbit_webdav",
+    ],
+)

@@ -59,10 +59,17 @@ public class ArchivaDavSessionProvider
         {
             AuthenticationResult result = httpAuth.getAuthenticationResult( request, null );
 
-            //Create a dav session
-            request.setDavSession( new ArchivaDavSession() );
+            boolean authenticated = servletAuth.isAuthenticated( request, result );
 
-            return servletAuth.isAuthenticated( request, result );
+            if ( authenticated )
+            {
+                // The session is what the rest of the WebDAV stack reads as "this request is signed in", so it goes
+                // on after a decision that said yes - not in advance of one, which is how a denied request used to
+                // end up holding a DavSession anyway.
+                request.setDavSession( new ArchivaDavSession() );
+            }
+
+            return authenticated;
         }
         catch ( AuthenticationException e )
         {
