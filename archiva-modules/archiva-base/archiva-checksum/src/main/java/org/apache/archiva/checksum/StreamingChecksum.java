@@ -22,6 +22,7 @@ package org.apache.archiva.checksum;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,31 +36,56 @@ public class StreamingChecksum
 {
     static final int BUFFER_SIZE=4096;
 
-    public static void updateChecksums( InputStream input, List<ChecksumAlgorithm> algorithms, List<OutputStream> checksumOutput) {
+    /**
+     * Computes the digest of {@code input} for every algorithm and writes each one to the output stream at the same
+     * index.
+     *
+     * <p>Everything that can go wrong is reported. The caller opened the output streams, and it opened them for
+     * writing, which emptied whatever digests were stored before - so a failure that this method kept to itself was
+     * indistinguishable from a published digest, and left the repository serving checksum files at zero bytes.
+     *
+     * @param input the content to digest; the caller opens and closes it
+     * @param algorithms the digest algorithms to compute
+     * @param checksumOutput one stream per algorithm, in the same order; the caller closes them
+     * @throws IOException if the content could not be read, or a digest could not be written
+     */
+    public static void updateChecksums( InputStream input, List<ChecksumAlgorithm> algorithms,
+                                        List<OutputStream> checksumOutput )
+        throws IOException
+    {
+        // Which digest lands in which file is decided by index, so a list that does not match the algorithms cannot
+        // be coped with: either one algorithm's digest is written into the next one's file, or the loop below walks
+        // off the end. Both used to end inside the empty catch, or as an unchecked index out of bounds that a caller
+        // catching only IOException could not even see.
+        if ( checksumOutput.size() != algorithms.size() )
+        {
+            throw new IOException( "expected one checksum output stream per algorithm, got " + checksumOutput.size()
+                + " stream(s) for " + algorithms.size() + " algorithm(s) " + algorithms );
+        }
+
         List<Checksum> checksums = algorithms.stream().map(a -> new Checksum( a )).collect( Collectors.toList());
         byte[] buffer = new byte[BUFFER_SIZE];
         int read;
-        try
+        while ( ( read = input.read( buffer ) ) >= 0 )
         {
-            while ( ( read = input.read( buffer ) ) >= 0 )
+            for (Checksum cs : checksums ) {
+                cs.update( buffer, 0, read );
+            }
+        }
+
+        for (int csIndex = 0; csIndex < checksums.size(); csIndex++) {
+            Checksum cs = checksums.get(csIndex);
+            cs.finish();
+            OutputStream os = checksumOutput.get(csIndex);
+            if (os == null)
             {
-                for (Checksum cs : checksums ) {
-                    cs.update( buffer, 0, read );
-                }
+                throw new IOException( "no output stream to store the " + algorithms.get( csIndex )
+                    + " checksum in, at index " + csIndex );
             }
-            int minIndex = Math.min(algorithms.size(), checksums.size());
-            for (int csIndex = 0; csIndex<minIndex; csIndex++) {
-                Checksum cs = checksums.get(csIndex);
-                cs.finish();
-                OutputStream os =checksumOutput.get(csIndex);
-                if (os!=null)
-                {
-                    os.write( cs.getChecksum( ).getBytes( ) );
-                }
-            }
-
-        } catch ( IOException e ) {
-
+            os.write( cs.getChecksum( ).getBytes( StandardCharsets.US_ASCII ) );
+            // The stream belongs to the caller and the caller closes it, so the digest has to be handed over here:
+            // an unflushed channel is the other way a checksum file gets published at zero length.
+            os.flush();
         }
     }
 }

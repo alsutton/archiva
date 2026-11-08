@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -57,6 +58,8 @@ public class DefaultReportRepositoriesService
                                                            Date endDate )
         throws ArchivaRestServiceException
     {
+        // statistics exist for every repository in the instance; only the caller's own may be reported
+        repositoriesId = restrictedToObservableRepos( repositoriesId );
         switch ( repositoriesId.size() )
         {
             case 0:
@@ -66,6 +69,32 @@ public class DefaultReportRepositoriesService
             default:
                 return getMultipleRepositoriesReport( repositoriesId, rowCount );
         }
+    }
+
+    /**
+     * Drops the repositories the caller cannot observe from a statistics request. Refuses a request that named at
+     * least one repository and none of them is observable, so that "no rights here" cannot be mistaken for
+     * "this repository has no statistics".
+     */
+    private List<String> restrictedToObservableRepos( List<String> repositoriesId )
+        throws ArchivaRestServiceException
+    {
+        if ( repositoriesId == null || repositoriesId.isEmpty() )
+        {
+            return Collections.emptyList();
+        }
+
+        List<String> observableRepos = getObservableRepos();
+        List<String> allowed = new ArrayList<>( repositoriesId );
+        allowed.retainAll( observableRepos );
+
+        if ( allowed.isEmpty() )
+        {
+            throw new ArchivaRestServiceException( "report.statistics.report.illegal-access",
+                                                   Response.Status.FORBIDDEN.getStatusCode(), null );
+        }
+
+        return allowed;
     }
 
     private List<RepositoryStatistics> getMultipleRepositoriesReport( List<String> repositoriesId, int rowCount )

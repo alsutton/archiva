@@ -46,6 +46,7 @@ import org.apache.archiva.metadata.repository.MetadataSessionException;
 import org.apache.archiva.metadata.repository.RepositorySession;
 import org.apache.archiva.metadata.repository.stats.model.RepositoryStatistics;
 import org.apache.archiva.metadata.repository.stats.model.RepositoryStatisticsProvider;
+import org.apache.archiva.repository.validation.RepositoryValidator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
@@ -92,6 +93,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -1201,15 +1203,9 @@ public class JcrMetadataRepository
 
         List<ProjectVersionReference> references = new ArrayList<>();
 
-        // TODO: bind variables instead
-        String q = "SELECT * FROM [archiva:dependency] WHERE ISDESCENDANTNODE([/repositories/" + repositoryId
-                + "/content]) AND [namespace]='" + namespace + "' AND [artifactId]='" + projectId + "'";
-        if (projectVersion != null) {
-            q += " AND [version]='" + projectVersion + "'";
-        }
+        BoundQuery dependees = dependeesQuery(repositoryId, namespace, projectId, projectVersion);
         try {
-            Query query = jcrSession.getWorkspace().getQueryManager().createQuery(q, Query.JCR_SQL2);
-            QueryResult result = query.execute();
+            QueryResult result = runNativeJcrQuery(jcrSession, dependees.statement, dependees.bindings);
 
             for (Node n : JcrUtils.getNodes(result)) {
                 n = n.getParent(); // dependencies grouping element
@@ -1230,11 +1226,50 @@ public class JcrMetadataRepository
                 ref.setReferenceType(ProjectVersionReference.ReferenceType.DEPENDENCY);
                 references.add(ref);
             }
-        } catch (RepositoryException e) {
+        } catch (MetadataRepositoryException | RepositoryException e) {
             throw new MetadataResolutionException(e.getMessage(), e);
         }
 
         return references;
+    }
+
+    /**
+     * The "who depends on this" statement. The namespace, project and version being asked about arrive from request
+     * path segments: they go in as bind variables, which {@code runNativeJcrQuery} binds, and only the repository
+     * scope is written into the statement, since a scope is a path and not a value and was validated by
+     * {@link #checkedRepositoryId(String)}.
+     *
+     * @throws IllegalArgumentException if the repository identifier could widen the scope of the query
+     */
+    private static BoundQuery dependeesQuery(String repositoryId, String namespace, String projectId,
+                                             String projectVersion) {
+        String statement = "SELECT * FROM [" + DEPENDENCY_NODE_TYPE + "] WHERE ISDESCENDANTNODE([/"
+                + getRepositoryContentPath(repositoryId) + "]) AND [namespace] = $namespace AND [artifactId] = $projectId"
+                + (projectVersion == null ? "" : " AND [version] = $projectVersion");
+
+        Map<String, String> bindings = new HashMap<>();
+        bindings.put("namespace", namespace);
+        bindings.put("projectId", projectId);
+        if (projectVersion != null) {
+            bindings.put("projectVersion", projectVersion);
+        }
+
+        return new BoundQuery(statement, bindings);
+    }
+
+    /**
+     * A statement and the values it expects, kept together so that a caller cannot pass one without the other:
+     * a statement full of {@code $} markers handed to a query with no bindings fails, and quietly returns nothing,
+     * which is indistinguishable from an empty repository.
+     */
+    private static final class BoundQuery {
+        private final String statement;
+        private final Map<String, String> bindings;
+
+        BoundQuery(String statement, Map<String, String> bindings) {
+            this.statement = statement;
+            this.bindings = Collections.unmodifiableMap(bindings);
+        }
     }
 
     @Override
@@ -1558,10 +1593,42 @@ public class JcrMetadataRepository
         return names;
     }
 
-    private static String getRepositoryPath(String repositoryId) {
-        return "repositories/" + repositoryId;
+    /**
+     * Repository identifiers name a node path, and this store logs into JCR as one administrative user
+     * (see {@link #login()}), so the path a query is scoped to is the entire boundary between repositories:
+     * nothing under JCR knows that repositories exist. It cannot be bound either, since {@code ISDESCENDANTNODE}
+     * takes a path literal rather than a variable, so an identifier is matched against the allow-list the
+     * administration layer applies when a repository is created, and anything else never gets as far as a query.
+     */
+    private static final Pattern REPOSITORY_ID = Pattern.compile(RepositoryValidator.REPOSITORY_ID_VALID_EXPRESSION);
+
+    /**
+     * The identifier of the repository a path is being built for.
+     *
+     * @throws IllegalArgumentException if the identifier is not one a repository could have been created with,
+     *                                  which is to say if using it could widen or move the scope of a query.
+     *                                  Unchecked because these paths are built from methods whose signatures
+     *                                  predate this check; a caller that treats it as an internal error is right,
+     *                                  a request reached the store naming a repository that cannot exist.
+     */
+    private static String checkedRepositoryId(String repositoryId) {
+        if (repositoryId == null || !REPOSITORY_ID.matcher(repositoryId).matches()) {
+            throw new IllegalArgumentException(
+                    "Repository identifier rejected: it must be non-empty and contain only letters, digits, '.', '-' or '_'");
+        }
+        return repositoryId;
     }
 
+    /**
+     * @throws IllegalArgumentException if the identifier could widen or move the scope of a query
+     */
+    private static String getRepositoryPath(String repositoryId) {
+        return "repositories/" + checkedRepositoryId(repositoryId);
+    }
+
+    /**
+     * @throws IllegalArgumentException if the identifier could widen or move the scope of a query
+     */
     private static String getRepositoryContentPath(String repositoryId) {
         return getRepositoryPath(repositoryId) + "/content";
     }
@@ -1768,7 +1835,7 @@ public class JcrMetadataRepository
 //            String whereClause = "WHERE ISDESCENDANTNODE([/repositories/" + repositoryId + "/content])";
 //            Query query = queryManager.createQuery( "SELECT size FROM [archiva:artifact] " + whereClause,
 //                                                    Query.JCR_SQL2 );
-            String whereClause = "WHERE ISDESCENDANTNODE([/repositories/" + repositoryId + "/content])";
+            String whereClause = "WHERE ISDESCENDANTNODE([/" + getRepositoryContentPath(repositoryId) + "])";
             Query query = queryManager.createQuery("SELECT type,size FROM [" + ARTIFACT_NODE_TYPE + "] " + whereClause, Query.JCR_SQL2);
 
             QueryResult queryResult = query.execute();

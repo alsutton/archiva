@@ -35,6 +35,13 @@ public interface RssFeedProcessor
 
     String KEY_ARTIFACT_ID = "artifactId";
 
+    /**
+     * Comma separated list of the repository ids the requester has been granted read access to. A feed that
+     * spans repositories is built from these and nothing else: whoever authenticated the request decides the
+     * scope, and a processor that guessed would read private repositories on behalf of a caller that may not.
+     */
+    String KEY_REPO_IDS = "repoIds";
+
     SyndFeed process( Map<String, String> reqParams )
         throws FeedException;
 }

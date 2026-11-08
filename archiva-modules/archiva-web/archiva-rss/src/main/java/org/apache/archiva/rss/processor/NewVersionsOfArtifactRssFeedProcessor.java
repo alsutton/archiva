@@ -76,22 +76,55 @@ public class NewVersionsOfArtifactRssFeedProcessor
 
         if ( groupId != null && artifactId != null )
         {
-            return processNewVersionsOfArtifact( groupId, artifactId );
+            return processNewVersionsOfArtifact( groupId, artifactId,
+                                                 permittedRepositories( reqParams.get( RssFeedProcessor.KEY_REPO_IDS ) ) );
         }
 
         return null;
     }
 
-    private SyndFeed processNewVersionsOfArtifact( String groupId, String artifactId )
+    /**
+     * The repositories the caller of this feed is allowed to read, as worked out by whoever authenticated the
+     * request. An absent or blank list is "nothing has been authorised", not "every repository": defaulting to
+     * the registry is what let an anonymous feed enumerate the versions held in private repositories.
+     */
+    static List<String> permittedRepositories( String repoIds )
+    {
+        List<String> permitted = new ArrayList<>();
+
+        if ( repoIds == null || repoIds.trim( ).isEmpty( ) )
+        {
+            return permitted;
+        }
+
+        for ( String repoId : repoIds.split( "," ) )
+        {
+            String id = repoId.trim( );
+            if ( !id.isEmpty( ) && !permitted.contains( id ) )
+            {
+                permitted.add( id );
+            }
+        }
+
+        return permitted;
+    }
+
+    private SyndFeed processNewVersionsOfArtifact( String groupId, String artifactId, List<String> permittedRepoIds )
         throws FeedException
     {
         List<ArtifactMetadata> artifacts = new ArrayList<>();
         try(RepositorySession session = repositorySessionFactory.createSession())
         {
             final MetadataRepository metadataRepository = session.getRepository( );
-            for ( Repository repo : repositoryRegistry.getRepositories() )
+            for ( Repository repository : repositoryRegistry.getRepositories() )
             {
-                final String repoId = repo.getId();
+                final String repoId = repository.getId();
+
+                if ( !permittedRepoIds.contains( repoId ) )
+                {
+                    continue;
+                }
+
                 Collection<String> versions = metadataRepository.getProjectVersions( session, repoId, groupId, artifactId );
                 for ( String version : versions )
                 {
