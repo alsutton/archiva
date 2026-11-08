@@ -345,17 +345,51 @@ public class FileUtils {
     }
 
 
+    /**
+     * Copies the content of {@code srcDir} into {@code destinationDir}.
+     *
+     * <p>Every entry that could be copied is copied, and the first failure is thrown once the walk is over: the
+     * caller cannot tell a tree that was copied from one that was half copied by looking at the destination, and
+     * the only production caller deletes the source on the strength of this method returning
+     * ({@code MavenIndexManager} moves an index with {@code copyContent} followed by {@code deleteDirectory}), so a
+     * quiet failure destroys the copy that still worked. Reporting it costs the caller the delete, which is the
+     * whole point.
+     *
+     * @throws IOException if any entry could not be copied; later failures are attached to the first one
+     */
     public static void copyContent(Path srcDir, Path destinationDir, boolean overwrite) throws IOException
     {
         CopyOption[] copyOption = overwrite ? new CopyOption[]{StandardCopyOption.REPLACE_EXISTING} : new CopyOption[]{};
-        Files.walk(srcDir).forEach(a -> {
-            Path b = destinationDir.resolve(srcDir.relativize( a ));
-            try {
-                Files.copy(a, b, copyOption);
-            } catch (IOException e) {
-                log.error( "Could not copy file {} to {}: {}", a, b, e.getMessage( ) );
+        IOException firstFailure = null;
+        int failed = 0;
+        // The walk is a stream of open directory handles: it has to be closed, or a copy over a network mount
+        // leaks one handle per directory it touched.
+        try (Stream<Path> entries = Files.walk(srcDir))
+        {
+            for (Path a : (Iterable<Path>) entries::iterator)
+            {
+                Path b = destinationDir.resolve(srcDir.relativize( a ));
+                try {
+                    Files.copy(a, b, copyOption);
+                } catch (IOException e) {
+                    log.error( "Could not copy file {} to {}: {}", a, b, e.getMessage( ), e );
+                    failed++;
+                    if (firstFailure == null)
+                    {
+                        firstFailure = e;
+                    }
+                    else
+                    {
+                        firstFailure.addSuppressed(e);
+                    }
+                }
             }
-        });
+        }
+        if (firstFailure != null)
+        {
+            throw new IOException( "Copy of " + srcDir + " to " + destinationDir + " failed for " + failed
+                                       + " of its entries, first: " + firstFailure.getMessage(), firstFailure );
+        }
     }
 
     public static void copyContent(Path srcDir, Path destinationDir) throws IOException {

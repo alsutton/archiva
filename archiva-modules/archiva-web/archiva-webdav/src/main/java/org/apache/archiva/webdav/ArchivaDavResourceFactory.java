@@ -106,6 +106,7 @@ import javax.inject.Named;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
@@ -117,9 +118,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -1264,27 +1263,59 @@ public class ArchivaDavResourceFactory
     }
 
 
-    private void createChecksumFiles(RepositoryGroup repo, String path) {
+    /**
+     * Writes a checksum file per configured algorithm next to {@code path}.
+     *
+     * <p>Anything that cannot be done is reported to the caller, which answers the request with a failure: the
+     * checksum files are opened for writing here, which empties whatever digests they held, so a run that quietly
+     * returned published an upload whose digests were zero bytes and left every later reader - Maven clients, this
+     * instance's own proxy, {@code ArtifactMissingChecksumsConsumer} - rejecting the artifact.
+     */
+    private void createChecksumFiles(RepositoryGroup repo, String path) throws IOException {
         List<ChecksumAlgorithm> algorithms = ChecksumUtil.getAlgorithms( archivaConfiguration.getConfiguration( ).getArchivaRuntimeConfiguration( ).getChecksumTypes( ) );
-        List<OutputStream> outStreams = algorithms.stream( ).map( algo -> {
-            String ext = algo.getDefaultExtension( );
-            try
-            {
-                return repo.getAsset( path + "." + ext ).getWriteStream( true );
-            }
-            catch ( IOException e )
-            {
-                e.printStackTrace( );
-                return null;
-            }
-        } ).filter( Objects::nonNull ).collect( Collectors.toList( ) );
+        // One stream per algorithm, kept at the algorithm's own index. Dropping the ones that could not be opened
+        // used to shorten the list, which moved every later digest into the file before it - and the caller had no
+        // way to notice either way.
+        List<OutputStream> outStreams = new ArrayList<>( algorithms.size( ) );
         try
         {
-            StreamingChecksum.updateChecksums( repo.getAsset(path).getReadStream(), algorithms, outStreams );
+            for (ChecksumAlgorithm algorithm : algorithms)
+            {
+                String ext = algorithm.getDefaultExtension( );
+                try
+                {
+                    outStreams.add( repo.getAsset( path + "." + ext ).getWriteStream( true ) );
+                }
+                catch ( IOException e )
+                {
+                    throw new IOException( "Could not open the " + ext + " checksum file of " + path + ": "
+                        + e.getMessage( ), e );
+                }
+            }
+
+            try (InputStream content = repo.getAsset( path ).getReadStream( ))
+            {
+                StreamingChecksum.updateChecksums( content, algorithms, outStreams );
+            }
         }
-        catch ( IOException e )
+        finally
         {
-            e.printStackTrace( );
+            // Nothing else closes these, and a digest still held in a stream's buffer is a checksum file of zero
+            // bytes on disk.
+            for (OutputStream out : outStreams)
+            {
+                if (out != null)
+                {
+                    try
+                    {
+                        out.close( );
+                    }
+                    catch ( IOException e )
+                    {
+                        log.warn( "Could not close the checksum stream of {}: {}", path, e.getMessage( ), e );
+                    }
+                }
+            }
         }
     }
 

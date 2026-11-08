@@ -358,7 +358,7 @@ public class FilesystemAsset implements StorageAsset, Comparable {
             applyDefaultPermissions(assetPath);
             return true;
         } catch (IOException e) {
-            log.error("Could not overwrite file {}", assetPath);
+            log.error("Could not overwrite file {}: {}", assetPath, e.getMessage(), e);
             // Revert if possible
             if (backup != null && Files.exists(backup)) {
                 Files.move(backup, assetPath, StandardCopyOption.REPLACE_EXISTING);
@@ -369,41 +369,85 @@ public class FilesystemAsset implements StorageAsset, Comparable {
                 try {
                     Files.deleteIfExists(backup);
                 } catch (IOException e) {
-                    log.error("Could not delete backup file {}", backup);
+                    log.error("Could not delete backup file {}: {}", backup, e.getMessage(), e);
                 }
             }
         }
 
     }
 
-    private void applyDefaultPermissions(Path filePath) {
-        try {
-            if (supportsPosix) {
-                Set<PosixFilePermission> perms;
-                // Note the two branches are not interchangeable: DEFAULT_POSIX_FILE_PERMS is
-                // "rw-rw----" and carries no execute bit, which on a directory means "cannot be
-                // traversed" - entries below it could not be looked up or opened, not even by the
-                // owner. The ACL branch below already maps directories to directories and files to
-                // files; the POSIX branch has to do the same.
-                if (Files.isDirectory(filePath)) {
-                    perms = defaultPosixDirectoryPermissions;
-                } else {
-                    perms = defaultPosixFilePermissions;
-                }
-                Files.setPosixFilePermissions(filePath, perms);
-            } else if (supportsAcl) {
-                List<AclEntry> perms;
-                if (Files.isDirectory(filePath)) {
-                    perms = getDefaultDirectoryAcls();
-                } else {
-                    perms = getDefaultFileAcls();
-                }
-                AclFileAttributeView aclAttr = Files.getFileAttributeView(filePath, AclFileAttributeView.class);
-                aclAttr.setAcl(perms);
+    /**
+     * Puts the file at {@code filePath} into the mode this storage was configured to give new entries.
+     *
+     * <p>This runs after the entry has been published at its final path, so a mode that could not be applied
+     * means the entry is already visible to readers in a mode nobody asked for. That used to be logged and
+     * dropped, which left the caller holding a value of {@code true} for an upload whose artifact the group it
+     * was stored for cannot even read - in a deployment where artifacts are served or consumed by a different
+     * user than the webapp, which is the common one.</p>
+     *
+     * <p>The mode is not decoration, so a failure to apply it is not a failure to ignore: it reaches the caller as
+     * the {@link IOException} the operations that publish entries already declare, and both of those operations
+     * withdraw what they published rather than leave it in a mode nobody asked for.</p>
+     *
+     * @throws IOException if the mode could not be applied
+     */
+    private void applyDefaultPermissions( Path filePath )
+        throws IOException
+    {
+        if ( supportsPosix )
+        {
+            Set<PosixFilePermission> perms;
+            // Note the two branches are not interchangeable: DEFAULT_POSIX_FILE_PERMS is
+            // "rw-rw----" and carries no execute bit, which on a directory means "cannot be
+            // traversed" - entries below it could not be looked up or opened, not even by
+            // the owner. The ACL branch below already maps directories to directories and files to
+            // files; the POSIX branch has to do the same.
+            if ( Files.isDirectory( filePath ) )
+            {
+                perms = defaultPosixDirectoryPermissions;
             }
-        } catch (IOException e) {
-            log.error("Could not set permissions for {}: {}", filePath, e.getMessage());
+            else
+            {
+                perms = defaultPosixFilePermissions;
+            }
+            setPosixPermissions( filePath, perms );
         }
+        else if ( supportsAcl )
+        {
+            List<AclEntry> perms;
+            if ( Files.isDirectory( filePath ) )
+            {
+                perms = getDefaultDirectoryAcls();
+            }
+            else
+            {
+                perms = getDefaultFileAcls();
+            }
+            AclFileAttributeView aclAttr = Files.getFileAttributeView( filePath, AclFileAttributeView.class );
+            setAclPermissions( filePath, aclAttr, perms );
+        }
+    }
+
+    /**
+     * The mode change itself, with nothing around it.
+     *
+     * <p>Separated from the choice of mode for one reason: a mode that cannot be applied has to reach the caller, and
+     * a test has to be able to say so. Nothing about a filesystem that a test can reach makes a file publishable and
+     * unchmodable - whatever refuses the change refuses the write that publishes the file first, since both act on
+     * the same inode - so an injection point is the only way the failure can be produced at all. Overriding this
+     * leaves every line above it running, including which mode is asked for.</p>
+     */
+    protected void setPosixPermissions( Path filePath, Set<PosixFilePermission> perms )
+        throws IOException
+    {
+        Files.setPosixFilePermissions( filePath, perms );
+    }
+
+    /** The ACL equivalent of {@link #setPosixPermissions(Path, Set)}, with the same reason for existing. */
+    protected void setAclPermissions( Path filePath, AclFileAttributeView aclAttr, List<AclEntry> perms )
+        throws IOException
+    {
+        aclAttr.setAcl( perms );
     }
 
     private Path findBackupFile(Path file) {
@@ -499,35 +543,58 @@ public class FilesystemAsset implements StorageAsset, Comparable {
 
     @Override
     public void create() throws IOException {
-        if (!Files.exists(assetPath)) {
-            if (directoryHint) {
-                Files.createDirectories(assetPath);
-            } else {
-                if (!Files.exists( assetPath.getParent() )) {
-                    Files.createDirectories( assetPath.getParent( ) );
-                }
-                Files.createFile(assetPath);
-            }
-            if (setPermissionsForNew) {
-                applyDefaultPermissions(assetPath);
-            }
-        }
+        createEntry(directoryHint);
     }
 
     @Override
     public void create( AssetType type ) throws IOException {
-        if (!Files.exists(assetPath)) {
-            if (type.equals( AssetType.CONTAINER ) || directoryHint) {
-                Files.createDirectories(assetPath);
-            } else {
-                if (!Files.exists( assetPath.getParent() )) {
-                    Files.createDirectories( assetPath.getParent( ) );
-                }
-                Files.createFile(assetPath);
+        createEntry(type.equals( AssetType.CONTAINER ) || directoryHint);
+    }
+
+    /**
+     * Creates the entry this asset stands for and gives it the mode this storage promises new entries. Both
+     * {@code create()} methods come through here.
+     *
+     * <p>The mode is applied after the entry has been created at its final path, so a mode that cannot be applied
+     * leaves the entry sitting there in whatever mode the filesystem gave it: a container that only its owner can
+     * traverse, an artifact that nobody else in the group can read. Telling the caller is what makes that a failed
+     * operation instead of a successful one, and taking the entry back is what keeps the telling true the next time:
+     * an entry that exists is an entry that {@code create()} has nothing left to do, so a leftover would be reported
+     * once and then never again.</p>
+     *
+     * @param asDirectory whether the entry is to be a container
+     * @throws IOException if the entry could not be created, or could not be given the mode
+     */
+    private void createEntry( boolean asDirectory )
+        throws IOException
+    {
+        if (Files.exists(assetPath)) {
+            return;
+        }
+        if (asDirectory) {
+            Files.createDirectories(assetPath);
+        } else {
+            if (!Files.exists( assetPath.getParent() )) {
+                Files.createDirectories( assetPath.getParent( ) );
             }
-            if (setPermissionsForNew) {
-                applyDefaultPermissions(assetPath);
+            Files.createFile(assetPath);
+        }
+        if (!setPermissionsForNew) {
+            return;
+        }
+        try {
+            applyDefaultPermissions(assetPath);
+        } catch (IOException e) {
+            log.error("Could not set permissions for newly created entry {}, which is removed rather than left "
+                          + "behind in a mode nobody asked for: {}", assetPath, e.getMessage(), e);
+            try {
+                Files.deleteIfExists(assetPath);
+            } catch (IOException deletion) {
+                // The mode is the failure worth reporting; this one only says the entry could not be taken back.
+                log.error("Could not remove entry {} whose permissions could not be set: {}", assetPath,
+                          deletion.getMessage(), deletion);
             }
+            throw e;
         }
     }
 
